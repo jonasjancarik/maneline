@@ -18,7 +18,7 @@ const parameterLabels = {
   lfoshape: 'LFO shape', dutycycle: 'Pulse width', stereospread: 'Stereo spread',
   octdown: 'Octave down', octup: 'Octave up', wowlevel: 'Wow level',
   attenuate: 'Attenuation', hbe: 'High-gain boost', c45: 'C45 switch', sat: 'Saturation',
-  tapTimeBPM: 'Tap tempo (BPM)', noteDivision: 'Note division'
+  tapTimeBPM: 'Tap tempo (BPM)', noteDivision: 'Note division', bypass: 'Switch'
 };
 const choiceLabels = { mid: 'Medium', none: 'Off', off: 'Off', jack: 'Guitar input',
   dottedEighth: 'Dotted eighth', quarter: 'Quarter',
@@ -35,7 +35,7 @@ const ratioParameters = new Set(['gain', 'gain2', 'bass', 'mid', 'treb', 'treble
   'lowtone', 'midtone', 'hightone', 'presence', 'resonance', 'drive', 'tone', 'mix', 'depth', 'moddepth', 'pandepth',
   'feedback', 'fdbklvl', 'feedbacklvl', 'wetlvl', 'decay', 'dwell', 'diffuse', 'damping', 'dampingcoef', 'bias',
   'lowcut', 'fblowcut', 'fbhighcut', 'lrphase', 'mastervolume', 'stereospread', 'dutycycle', 'wowlevel',
-  'attenuate', 'sat']);
+  'attenuate', 'sat', 'output', 'level', 'intensity', 'sensitivity', 'chase', 'threshold', 'octdown', 'octup', 'cut', 'blend']);
 // Whole-number choices. The amp does not report their names, so they stay numbered.
 const wholeNumberParameters = new Set(['comppreset', 'dlymodtype', 'panmodtype', 'modshape', 'inputfiltermode',
   'lfoclip', 'prefilttype', 'lfoshape', 'shape', 'type', 'sag', 'mode']);
@@ -52,6 +52,59 @@ const advancedParameters = new Set(['bias', 'sag', 'gateDetectorPosition', 'fblo
   'diffuse', 'inputfiltermode', 'prefilttype', 'lfoclip', 'lfoshape', 'dutycycle', 'stereospread', 'avgdelay',
   'predelay', 'dampingcoef', 'hbe', 'c45', 'mode']);
 
+// The knobs on each model's face, in order. Anything else goes under "More settings".
+const ampKnobs = ['gain', 'gain2', 'volume', 'treb', 'mid', 'bass', 'presence', 'mastervolume', 'cut', 'blend'];
+const modelKnobs = {
+  ACD_LargeOverdrive: ['gain', 'level', 'lowtone', 'midtone', 'hightone'],
+  ACD_Greenbox: ['gain', 'tone', 'outputlevel', 'mix'],
+  ACD_MythicDrive: ['gain', 'treble', 'output'],
+  ACD_Blackbox: ['gain', 'tone', 'outputlevel'],
+  ACD_VariFuzz: ['gain', 'level'],
+  ACD_BigFuzzGT: ['gain', 'tone', 'outputlevel'],
+  ACD_Octobot: ['octdown', 'octup', 'level'],
+  ACD_CompressorSimple: [],
+  ACD_Sustain: ['sensitivity', 'output'],
+  ACD_MustangFiveBandEq1: ['low', 'lowmid', 'mid', 'highmid', 'high', 'gain'],
+  ACD_EcFilter: ['level', 'threshold', 'dampingcoef'],
+  ACD_ChorusSine: ['ratehz', 'depth', 'wetlvl'],
+  ACD_FlangerTriangle: ['ratehz', 'depth', 'lrphase', 'wetlvl', 'fdbklvl'],
+  ACD_PhaserFender: ['ratehz', 'depth', 'feedbacklvl', 'wetlvl'],
+  ACD_Vibratone: ['ratehz', 'depth', 'wetlvl', 'fdbklvl'],
+  ACD_TremoloSine: ['ratehz', 'wetlvl'],
+  ACD_TremoloHarmonic: ['ratehz', 'intensity'],
+  ACD_BoilerPlateMono: ['delaytime', 'feedback', 'mix'],
+  ACD_BoilerPlateTapeLite: ['dlytime', 'feedback', 'wetlvl', 'wowlevel'],
+  ACD_BoilerPlateReverse: ['time', 'feedback', 'level', 'chase'],
+  ACD_ModDelay: ['dlytime', 'feedback', 'mix', 'fblowcut', 'fbhighcut', 'modratehz', 'moddepth', 'panratehz', 'pandepth'],
+  ACD_FenderLargeHall: ['decay', 'dwell', 'tone', 'wetlvl'],
+  ACD_FenderSmallRoom: ['decay', 'dwell', 'tone', 'wetlvl'],
+  ACD_Spring65: ['decay', 'dwell', 'tone', 'wetlvl'],
+  ACD_FenderLargeModulatedHall: ['decay', 'dwell', 'tone', 'wetlvl', 'depth', 'ratehz']
+};
+// Shown beside the knobs when a model's main control isn't a knob.
+const modelMainFields = { ACD_CompressorSimple: ['comppreset'] };
+const knobLabels = { treb: 'Treble', mid: 'Middle', gain2: 'Gain 2', mastervolume: 'Master', outputlevel: 'Output',
+  lowtone: 'Bass', midtone: 'Middle', hightone: 'Treble', lowmid: 'Low mid', highmid: 'High mid', octdown: 'Octave down',
+  octup: 'Octave up', dampingcoef: 'Damping', ratehz: 'Rate', lrphase: 'Phase', wetlvl: 'Level', fdbklvl: 'Feedback',
+  feedbacklvl: 'Feedback', delaytime: 'Time', dlytime: 'Time', time: 'Time', wowlevel: 'Wow', fblowcut: 'Low cut',
+  fbhighcut: 'High cut', modratehz: 'Mod rate', moddepth: 'Mod depth', panratehz: 'Pan rate', pandepth: 'Pan depth' };
+// Knob travel for values the amp stores in real units. Inferred from saved presets with some room on each side,
+// so the ends may be further than the amp accepts; it reports an error rather than taking a bad value.
+const nativeRanges = {
+  volume: { min: -40, max: 0, step: 0.1, unit: ' dB', digits: 1 },
+  outputlevel: { min: -24, max: 0, step: 0.1, unit: ' dB', digits: 1 },
+  wetlvl: { min: -30, max: 0, step: 0.1, unit: ' dB', digits: 1 },
+  ratehz: { min: 0.1, max: 10, step: 0.01, unit: ' Hz', digits: 2 },
+  modratehz: { min: 0.1, max: 10, step: 0.01, unit: ' Hz', digits: 2 },
+  panratehz: { min: 0.1, max: 10, step: 0.01, unit: ' Hz', digits: 2 },
+  dlytime: { min: 0.02, max: 1.5, step: 0.01, unit: ' s', digits: 2 },
+  delaytime: { min: 0.02, max: 1.5, step: 0.01, unit: ' s', digits: 2 },
+  time: { min: 0.02, max: 1.5, step: 0.01, unit: ' s', digits: 2 }
+};
+const eqBand = { min: -12, max: 12, step: 0.1, unit: ' dB', digits: 1 };
+const eqParameters = new Set(['low', 'lowmid', 'mid', 'highmid', 'high', 'gain']);
+const ratioKnob = { min: 0, max: 10, step: 0.1, scale: 10, unit: '', digits: 1 };
+
 function parameterLabel(key) {
   return parameterLabels[key] || key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, c => c.toUpperCase());
 }
@@ -62,12 +115,33 @@ function parameterRank(key) {
 }
 
 // Decides which control a parameter gets. `unscaled` lists parameters seen outside 0–1 for this model.
-function controlSpec(parameter, value, unscaled, choices) {
+function controlSpec(parameter, value, unscaled, choices, model) {
   if (typeof value === 'boolean') return { kind: 'toggle' };
   if (typeof value === 'string') return choices?.length ? { kind: 'select' } : { kind: 'text' };
+  if (model === 'ACD_MustangFiveBandEq1' && eqParameters.has(parameter)) return { kind: 'knob', scale: 1, ...eqBand };
+  // A level can be stored either way depending on the model; rates, times and output levels are always real units.
+  if (nativeRanges[parameter] && (unscaled || parameter !== 'wetlvl')) {
+    return { kind: 'knob', scale: 1, ...nativeRanges[parameter] };
+  }
   if (wholeNumberParameters.has(parameter)) return { kind: 'number', step: 1, min: 0 };
-  if (ratioParameters.has(parameter) && !unscaled && value >= 0 && value <= 1) return { kind: 'slider' };
+  if (ratioParameters.has(parameter) && !unscaled && value >= 0 && value <= 1) return { kind: 'knob', ...ratioKnob };
   const step = numberSteps[parameter] || (Math.abs(value) >= 10 ? 1 : 0.1);
   return { kind: 'number', step, min: positiveOnly.has(parameter) ? 0 : undefined,
     label: unscaled && parameter === 'wetlvl' ? 'Effect level (dB)' : undefined };
+}
+
+function knobLabel(parameter) { return knobLabels[parameter] || parameterLabel(parameter).replace(/ \(.*\)$/, ''); }
+function formatKnob(spec, shown) { return `${Number(shown).toFixed(spec.digits)}${spec.unit}`.replace('-', '−'); }
+
+// Which of a model's parameters are knobs, plain main controls, and tucked-away extras.
+function splitParameters(node, specOf) {
+  const parameters = Object.keys(node.dspUnitParameters).filter(key => key !== 'bypass' && key !== 'bypassType');
+  const isKnob = key => specOf(key).kind === 'knob';
+  const fallback = parameters.filter(isKnob).sort((a, b) => parameterRank(a) - parameterRank(b)).slice(0, 6);
+  const wanted = node.nodeId === 'amp' ? ampKnobs : modelKnobs[node.FenderId] ?? fallback;
+  const knobs = wanted.filter(key => parameters.includes(key) && isKnob(key));
+  const main = (modelMainFields[node.FenderId] ?? []).filter(key => parameters.includes(key));
+  const extras = parameters.filter(key => !knobs.includes(key) && !main.includes(key))
+    .sort((a, b) => parameterRank(a) - parameterRank(b));
+  return { knobs, main, extras };
 }

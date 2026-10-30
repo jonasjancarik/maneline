@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Mustang Micro Plus · Maneline</title>
+  <link rel="stylesheet" href="/web_ui/_static/pedal-kit/pedal-kit.css">
   <link rel="stylesheet" href="/web_ui/_static/micro-plus.css">
   <link rel="icon" href="/web_ui/_static/maneline-icon-512x512.png">
+  <script src="/web_ui/_static/pedal-kit/pedal-kit.js" defer></script>
   <script src="/web_ui/_static/micro-plus-params.js" defer></script>
   <script src="/web_ui/_static/micro-plus.js" defer></script>
 </head>
@@ -63,14 +65,26 @@
         <span id="name-count"></span>
         <span id="sync" role="status"></span>
       </div>
-      <p class="hint">Changes reach the amp as you make them, about once a second. They aren't kept until you save.</p>
-      <h2 class="visually-hidden">Signal chain</h2>
-      <div id="chain"></div>
-      <section id="module-panel" aria-live="off"></section>
+      <p class="hint">Select a pedal or the amp to adjust it. Changes reach the amp as you make them, about once a second, and aren't kept until you save.</p>
+      <h2 class="visually-hidden">Your pedalboard</h2>
+      <div id="board"></div>
       <details id="changes" hidden>
         <summary id="changes-summary"></summary>
         <ul id="changes-list"></ul>
       </details>
+      <dialog id="closeup" aria-labelledby="closeup-title">
+        <div id="closeup-inner">
+          <div class="closeup-head">
+            <div>
+              <h2 id="closeup-title"></h2>
+              <p id="closeup-kind"></p>
+            </div>
+            <button id="closeup-close" type="button">Done</button>
+          </div>
+          <p id="closeup-status" role="status"></p>
+          <div id="closeup-body"></div>
+        </div>
+      </dialog>
     </fieldset>
     <div id="last-save" hidden>
       <span id="last-save-text"></span>

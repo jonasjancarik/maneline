@@ -52,24 +52,34 @@ settings. On narrow screens the list opens as a drawer from the **Presets** butt
 Saving was tested only against disposable slot 100 on firmware 1.1.11. Other
 destinations use the same write path but were not overwritten during testing.
 
-Choose a preset, then pick a module in the signal chain to open its controls.
-Each effect has an on/off switch in the chain, and less common settings are under
-**More settings**. Changes are sent to the active sound while you make them.
+Choose a preset and it appears as a pedalboard: stompbox, modulation, amp, delay
+and reverb, joined by a cable. It runs across the screen on a computer and snakes
+down on a phone. Each pedal's footswitch turns it on or off from the board. Select
+a pedal or the amp to open a close-up with its knobs; select an empty position to
+add an effect. Drag a knob up or down, or select it and use the arrow keys. A model
+with more than six knobs spreads them over pages, and less common settings are
+under **More settings**. To close the close-up, choose **Done**, press Escape or
+select outside it. Changes are sent to the active sound while you make them.
 Controls stay usable during a send: the amp takes about a second per change, so
-only the newest value of each control is sent and a slider drag is heard in steps.
+only the newest value of each control is sent and a knob drag is heard in steps.
 A parameter change is acknowledged and its updated preset is read back before the
 browser accepts it. The editor queries the device's parameter type before
 writing, distinguishing continuous float controls from integer choices.
 
-The top bar counts unsaved changes. Changed controls are marked with a **Reset**
-button, and the list under the module shows each change from the saved preset.
+The top bar counts unsaved changes. A pedal with changes is outlined on the board,
+changed knobs are marked with a dot, and the close-up offers to undo that pedal's
+changes. The list under the board shows each change from the saved preset, with a
+**Reset** button for each one.
 That comparison is held by the page for the current connection, so a page opened
 after edits were made can show "Unsaved changes" without listing them.
 
-Normalized controls use a 0–10 slider when the stored value is between 0 and 1.
-Other numeric controls display the device's native values; many units and ranges
-are inferred from preset definitions rather than documented, and the amp rejects
-values it does not accept. Numbered choices such as **Delay modulation type**
+Normalized values appear as 0–10. Knobs for values the amp stores in real units
+(dB, Hz and seconds) use ranges inferred from saved presets with some room on each
+side, not from documentation, so the far ends of a knob may be values the amp
+refuses. A saved value outside that range widens the knob rather than being changed,
+and the amp rejects values it does not accept. Which knobs each model shows follows
+Fender Tone's layouts where they were checked and saved presets elsewhere.
+Numbered choices such as **Delay modulation type**
 stay numbered because the amp does not report their names. String menus include
 values observed on the device and may not contain every option supported by the
 firmware. Amplifier choices currently cover the app's 25 guitar models. An

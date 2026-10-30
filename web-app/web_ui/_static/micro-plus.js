@@ -18,7 +18,7 @@ let sending = false;
 let idleWaiters = [];
 let dragging = null;
 
-let selectedNode = 'amp';
+let selectedNode = null; // The pedal open in the close-up.
 let builtKey = '';
 let renderedNames = '';
 let renderedChanges = '';
@@ -44,9 +44,6 @@ function setText(element, text) {
 function isEmptySlot(preset) { return !preset.name || /^empty$/i.test(preset.name.trim()); }
 function displayName(preset) { return isEmptySlot(preset) ? 'Empty' : preset.name; }
 function presetByNumber(number) { return known?.presets.find(preset => preset.preset === number); }
-function formatNumber(value, digits = 1) {
-  return value.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
-}
 function guard() { return { preset: state.preset, revision: state.revision }; }
 function documentName() { return known?.document?.info.displayName.trim() ?? ''; }
 function nameChanged() { return Boolean(known?.document) && nameInput.value.trim() !== documentName(); }
@@ -398,7 +395,7 @@ function modelName(node) {
 }
 function specFor(node, parameter, value) {
   return controlSpec(parameter, value, (known.unscaled?.[node.FenderId] || []).includes(parameter),
-    known.parameter_choices?.[parameter]);
+    known.parameter_choices?.[parameter], node.FenderId);
 }
 
 // Controls are only rebuilt when their shape changes, so focus and drags survive edits.
@@ -407,44 +404,99 @@ function shapeKey() {
     Object.entries(node.dspUnitParameters).map(([key, value]) => [key, specFor(node, key, value).kind])])]);
 }
 
-function buildChain() {
-  const chain = $('chain');
-  chain.replaceChildren();
-  let selectedChip = null;
+const nodeColours = { stomp: '#fe6a38', mod: '#2bc4a0', amp: '#5d5a54', delay: '#5a9bea', reverb: '#a184ea' };
+const addLabels = { stomp: 'Add a stompbox', mod: 'Add modulation', delay: 'Add a delay', reverb: 'Add a reverb' };
+
+function isEmptyNode(node) { return node.FenderId === 'DUBS_Unknown'; }
+function hasBypass(node) { return 'bypass' in node.dspUnitParameters && !isEmptyNode(node); }
+function specOfNode(node) { return key => specFor(node, key, node.dspUnitParameters[key]); }
+
+function bindBypass(input, node) {
+  input.addEventListener('change', () => {
+    for (const twin of controlsFor(`${node.nodeId}/bypass`)) writeControl(twin, !input.checked);
+    queueEdit(node.nodeId, 'bypass', !input.checked);
+  });
+}
+
+function controlsFor(key) {
+  return editorFields.querySelectorAll(`[data-key="${CSS.escape(key)}"]:not(.field)`);
+}
+
+// The board: one small pedal per position, joined by a cable.
+function buildBoard() {
+  const board = $('board');
+  board.replaceChildren();
   for (const node of currentNodes()) {
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.dataset.node = node.nodeId;
-    const main = document.createElement('button');
-    main.type = 'button';
-    main.className = 'chip-main';
-    const title = document.createElement('span');
-    title.className = 'chip-title';
-    title.textContent = nodeTitle(node);
-    const model = document.createElement('span');
-    model.className = 'chip-model';
-    main.append(title, model);
-    main.addEventListener('click', () => { selectedNode = node.nodeId; renderEditor(); });
-    chip.append(main);
-    const hasBypass = 'bypass' in node.dspUnitParameters && node.FenderId !== 'DUBS_Unknown';
-    const power = document.createElement('label');
-    power.className = hasBypass ? 'chip-power' : 'chip-power always-on';
-    if (hasBypass) {
-      const toggle = document.createElement('input');
-      toggle.type = 'checkbox';
-      toggle.dataset.key = `${node.nodeId}/bypass`;
-      toggle.setAttribute('aria-label', `${nodeTitle(node)} on`);
-      toggle.addEventListener('change', () => queueEdit(node.nodeId, 'bypass', !toggle.checked));
-      power.append(toggle, document.createTextNode('On'));
-    } else {
-      power.textContent = node.FenderId === 'DUBS_Unknown' ? 'Not in use' : 'Always on';
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.dataset.node = node.nodeId;
+    if (isEmptyNode(node)) {
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'empty-position';
+      add.textContent = addLabels[node.nodeId] || `Add ${nodeTitle(node).toLowerCase()}`;
+      add.addEventListener('click', () => openCloseup(node.nodeId));
+      slot.append(add);
+      board.append(slot);
+      continue;
     }
-    chip.append(power);
-    chain.append(chip);
-    if (node.nodeId === selectedNode) selectedChip = chip;
+    const pedal = document.createElement('div');
+    pedal.className = node.nodeId === 'amp' ? 'pedal light-ink board-pedal' : 'pedal board-pedal';
+    pedal.style.setProperty('--tint', nodeColours[node.nodeId]);
+    const face = document.createElement('div');
+    face.className = 'face';
+    const open = document.createElement('button');
+    open.type = 'button';
+    open.className = 'open-pedal';
+    open.setAttribute('aria-label', `Open ${modelName(node)}, ${nodeTitle(node)}`);
+    const dials = document.createElement('span');
+    dials.className = 'mini-dials';
+    const { knobs } = splitParameters(node, specOfNode(node));
+    for (const parameter of knobs.slice(0, node.nodeId === 'amp' ? 5 : 3)) {
+      const dial = document.createElement('span');
+      dial.className = 'mini-dial';
+      dial.dataset.mini = `${node.nodeId}/${parameter}`;
+      dial.innerHTML = partImage('knob', 'body') + partImage('pointer', 'pointer');
+      dials.append(dial);
+    }
+    const light = document.createElement('span');
+    light.className = 'light';
+    light.innerHTML = partImage('light-off', 'unlit') + partImage('light-on', 'lit');
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = modelName(node);
+    const kind = document.createElement('span');
+    kind.className = 'kind';
+    kind.textContent = nodeTitle(node);
+    open.append(dials, light, name, kind);
+    open.addEventListener('click', () => openCloseup(node.nodeId));
+    face.append(open);
+    if (hasBypass(node)) {
+      const foot = buildFootswitch(modelName(node), !node.dspUnitParameters.bypass, `${node.nodeId}/bypass`);
+      bindBypass(foot.querySelector('input'), node);
+      face.append(foot);
+    }
+    pedal.append(face);
+    slot.append(pedal);
+    board.append(slot);
   }
-  // On narrow screens the chain scrolls sideways; keep the open module in view.
-  if (selectedChip) chain.scrollLeft = Math.max(0, selectedChip.offsetLeft - chain.offsetLeft - 16);
+}
+
+function buildKnobSpec(node, parameter) {
+  const value = node.dspUnitParameters[parameter];
+  const spec = specFor(node, parameter, value);
+  const shown = value * spec.scale;
+  return { label: knobLabel(parameter), value: shown, min: Math.min(spec.min, shown), max: Math.max(spec.max, shown),
+    step: spec.step, format: text => formatKnob(spec, text), key: `${node.nodeId}/${parameter}` };
+}
+
+function bindKnobs(root, node) {
+  for (const input of root.querySelectorAll('.knob input')) {
+    const parameter = input.dataset.key.split('/')[1];
+    const spec = specFor(node, parameter, node.dspUnitParameters[parameter]);
+    input.addEventListener('input', () => queueEdit(node.nodeId, parameter, Number(input.value) / spec.scale));
+    input.closest('.knob').querySelector('.dial').addEventListener('pointerdown', () => { dragging = input; });
+  }
 }
 
 function buildField(node, parameter, value) {
@@ -467,24 +519,29 @@ function buildField(node, parameter, value) {
     control.type = 'checkbox';
     control.addEventListener('change', () => queueEdit(node.nodeId, parameter, control.checked));
     label.prepend(control);
-    control.id = id;
   } else if (spec.kind === 'select') {
     control = document.createElement('select');
+    for (const choice of new Set([value, ...known.parameter_choices[parameter]])) {
+      const option = document.createElement('option');
+      option.value = choice;
+      option.textContent = choiceLabels[choice] || parameterLabel(choice);
+      control.append(option);
+    }
     control.addEventListener('change', () => queueEdit(node.nodeId, parameter, control.value));
   } else {
     control = document.createElement('input');
-    if (spec.kind === 'slider') {
+    if (spec.kind === 'knob') {
       control.type = 'range';
-      control.min = '0';
-      control.max = '10';
-      control.step = '0.1';
+      control.min = String(Math.min(spec.min, value * spec.scale));
+      control.max = String(Math.max(spec.max, value * spec.scale));
+      control.step = String(spec.step);
       const output = document.createElement('output');
       output.htmlFor = id;
       head.append(output);
       control.addEventListener('pointerdown', () => { dragging = control; });
       control.addEventListener('input', () => {
-        output.textContent = formatNumber(Number(control.value));
-        queueEdit(node.nodeId, parameter, Number(control.value) / 10);
+        output.textContent = formatKnob(spec, control.value);
+        queueEdit(node.nodeId, parameter, Number(control.value) / spec.scale);
       });
     } else if (spec.kind === 'number') {
       control.type = 'number';
@@ -503,14 +560,9 @@ function buildField(node, parameter, value) {
   }
   control.id = id;
   control.dataset.key = key;
-  if (spec.kind !== 'toggle') {
-    const reset = resetButton(node, parameter);
-    head.append(reset);
-    field.append(head, control);
-  } else {
-    head.append(resetButton(node, parameter));
-    field.append(head);
-  }
+  head.append(resetButton(node, parameter));
+  if (spec.kind === 'toggle') field.append(head);
+  else field.append(head, control);
   return field;
 }
 
@@ -523,95 +575,133 @@ function resetButton(node, parameter) {
   reset.setAttribute('aria-label', `Reset ${parameterLabel(parameter)} to its saved value`);
   reset.addEventListener('click', () => {
     const saved = baselineValue(node.nodeId, parameter);
-    if (saved !== undefined) {
-      queueEdit(node.nodeId, parameter, saved);
-      const control = editorFields.querySelector(`.field [data-key="${CSS.escape(`${node.nodeId}/${parameter}`)}"]`);
-      if (control) { writeControl(control, saved); control.focus({ preventScroll: true }); }
-    }
+    if (saved === undefined) return;
+    resetToSaved(node.nodeId, parameter, saved);
+    controlsFor(`${node.nodeId}/${parameter}`)[0]?.focus({ preventScroll: true });
   });
   return reset;
 }
 
-function buildPanel() {
-  const panel = $('module-panel');
-  panel.replaceChildren();
+function resetToSaved(nodeId, parameter, saved) {
+  queueEdit(nodeId, parameter, saved);
+  for (const control of controlsFor(`${nodeId}/${parameter}`)) writeControl(control, saved);
+}
+
+function buildModelPicker(node) {
+  const label = document.createElement('label');
+  label.className = 'model-picker';
+  const name = document.createElement('span');
+  name.textContent = node.nodeId === 'amp' ? 'Amp model' : 'Effect';
+  const select = document.createElement('select');
+  select.dataset.key = `${node.nodeId}/#model`;
+  const choices = known.models[node.nodeId] || [];
+  const options = choices.some(model => model.id === node.FenderId) ? choices
+    : [{ id: node.FenderId, name: modelName(node) }, ...choices];
+  for (const model of options) {
+    const option = document.createElement('option');
+    option.value = model.id;
+    option.textContent = model.name;
+    select.append(option);
+  }
+  select.value = node.FenderId;
+  select.addEventListener('change', () => {
+    exclusiveOperation(EDITOR_API, { action: 'model', ...guard(), node: node.nodeId, model: select.value }, 'Changing model…');
+  });
+  label.append(name, select);
+  return label;
+}
+
+// The close-up: the chosen pedal at full size, with anything less common tucked away below it.
+function buildCloseup() {
+  const body = $('closeup-body');
+  body.replaceChildren();
   const node = nodeById(selectedNode);
   if (!node) return;
-  const title = document.createElement('div');
-  title.className = 'panel-title';
-  const heading = document.createElement('h3');
-  heading.textContent = nodeTitle(node);
-  title.append(heading);
-  const choices = known.models[node.nodeId] || [];
-  if (choices.length) {
-    const select = document.createElement('select');
-    select.dataset.key = `${node.nodeId}/#model`;
-    select.setAttribute('aria-label', `${nodeTitle(node)} model`);
-    const options = choices.some(model => model.id === node.FenderId) ? choices
-      : [{ id: node.FenderId, name: modelName(node) }, ...choices];
-    for (const model of options) {
-      const option = document.createElement('option');
-      option.value = model.id;
-      option.textContent = model.name;
-      select.append(option);
+  setText($('closeup-title'), isEmptyNode(node) ? (addLabels[node.nodeId] || nodeTitle(node)) : modelName(node));
+  setText($('closeup-kind'), isEmptyNode(node) ? 'Nothing is in this position yet. Choose an effect to add one.' : nodeTitle(node));
+  if (!isEmptyNode(node)) {
+    const { knobs, main, extras } = splitParameters(node, specOfNode(node));
+    const pedal = buildPedal({ name: modelName(node), colour: nodeColours[node.nodeId], lightInk: node.nodeId === 'amp',
+      knobs: knobs.map(parameter => buildKnobSpec(node, parameter)), footswitch: hasBypass(node),
+      on: !node.dspUnitParameters.bypass, bypassKey: `${node.nodeId}/bypass` });
+    bindKnobs(pedal, node);
+    const foot = pedal.querySelector('.foot input');
+    if (foot) bindBypass(foot, node);
+    const stage = document.createElement('div');
+    stage.className = 'closeup-stage';
+    stage.append(pedal);
+    body.append(stage);
+    if (main.length) {
+      const fields = document.createElement('div');
+      fields.className = 'fields';
+      for (const parameter of main) fields.append(buildField(node, parameter, node.dspUnitParameters[parameter]));
+      body.append(fields);
     }
-    select.value = node.FenderId;
-    select.addEventListener('change', () => {
-      const chosen = select.value;
-      exclusiveOperation(EDITOR_API, { action: 'model', ...guard(), node: node.nodeId, model: chosen }, 'Changing model…');
+    if (knobs.length) {
+      const tip = document.createElement('p');
+      tip.className = 'knob-tip';
+      tip.textContent = 'Drag a knob up or down, or select it and use the arrow keys.';
+      body.append(tip);
+    }
+    const undo = document.createElement('button');
+    undo.type = 'button';
+    undo.id = 'closeup-undo';
+    undo.hidden = true;
+    undo.textContent = node.nodeId === 'amp' ? 'Undo my changes to the amp' : 'Undo my changes to this pedal';
+    undo.addEventListener('click', () => {
+      for (const change of changesFromSaved()) {
+        if (change.nodeId === node.nodeId && change.parameter) resetToSaved(node.nodeId, change.parameter, change.saved);
+      }
     });
-    title.append(select);
-  }
-  panel.append(title);
-  if (node.FenderId === 'DUBS_Unknown') {
-    const none = document.createElement('p');
-    none.className = 'no-controls';
-    none.textContent = 'Nothing is in this position. Choose a model above to add one.';
-    panel.append(none);
-    return;
-  }
-  const entries = Object.entries(node.dspUnitParameters)
-    .filter(([parameter]) => parameter !== 'bypassType' && parameter !== 'bypass')
-    .sort(([a], [b]) => parameterRank(a) - parameterRank(b));
-  const main = entries.filter(([parameter]) => !advancedParameters.has(parameter));
-  const advanced = entries.filter(([parameter]) => advancedParameters.has(parameter));
-  const fields = document.createElement('div');
-  fields.className = 'fields';
-  for (const [parameter, value] of main) fields.append(buildField(node, parameter, value));
-  panel.append(fields);
-  if (advanced.length) {
-    const details = document.createElement('details');
-    details.id = 'advanced';
-    details.open = advancedOpen;
-    details.addEventListener('toggle', () => { advancedOpen = details.open; });
-    const summary = document.createElement('summary');
-    summary.textContent = `More settings (${advanced.length})`;
-    const more = document.createElement('div');
-    more.className = 'fields';
-    for (const [parameter, value] of advanced) more.append(buildField(node, parameter, value));
-    details.append(summary, more);
-    panel.append(details);
-  }
-  for (const select of panel.querySelectorAll('.field select')) {
-    const [nodeId, parameter] = select.dataset.key.split('/');
-    const value = nodeById(nodeId).dspUnitParameters[parameter];
-    for (const choice of new Set([value, ...known.parameter_choices[parameter]])) {
-      const option = document.createElement('option');
-      option.value = choice;
-      option.textContent = choiceLabels[choice] || parameterLabel(choice);
-      select.append(option);
+    body.append(undo);
+    body.append(buildModelPicker(node));
+    if (extras.length) {
+      const details = document.createElement('details');
+      details.id = 'advanced';
+      details.open = advancedOpen;
+      details.addEventListener('toggle', () => { advancedOpen = details.open; });
+      const summary = document.createElement('summary');
+      summary.textContent = `More settings (${extras.length})`;
+      const more = document.createElement('div');
+      more.className = 'fields';
+      for (const parameter of extras) more.append(buildField(node, parameter, node.dspUnitParameters[parameter]));
+      details.append(summary, more);
+      body.append(details);
     }
+  } else {
+    body.append(buildModelPicker(node));
   }
+}
+
+function openCloseup(nodeId) {
+  selectedNode = nodeId;
+  builtKey = '';
+  renderEditor();
+  renderStatus();
+  const dialog = $('closeup');
+  if (!dialog.open) dialog.showModal();
 }
 
 // Editor: keeping controls in step with the amp ------------------------------
 function writeControl(control, value) {
   if (control.type === 'checkbox') {
-    control.checked = control.dataset.key.endsWith('/bypass') ? !value : Boolean(value);
+    const isBypass = control.dataset.key.endsWith('/bypass');
+    control.checked = isBypass ? !value : Boolean(value);
+    if (isBypass) {
+      const pedal = control.closest('.pedal');
+      if (pedal) setPedalOn(pedal, control.checked);
+    }
   } else if (control.type === 'range') {
-    control.value = String(value * 10);
+    const [nodeId, parameter] = control.dataset.key.split('/');
+    const spec = specFor(nodeById(nodeId), parameter, value);
+    const shown = value * spec.scale;
+    // An amp value past the usual travel widens the knob instead of being misreported.
+    if (shown < Number(control.min)) control.min = String(shown);
+    if (shown > Number(control.max)) control.max = String(shown);
+    control.value = String(shown);
+    control.repaintKnob?.();
     const output = control.closest('.field')?.querySelector('output');
-    if (output) setText(output, formatNumber(Number(control.value)));
+    if (output) setText(output, formatKnob(spec, control.value));
   } else if (control.type === 'number') {
     if (Number(control.value) !== Number(value.toPrecision(6)) || control.value === '') control.value = String(Number(value.toPrecision(6)));
   } else if (control.value !== value) {
@@ -667,7 +757,8 @@ function describeValue(node, parameter, value) {
   if (parameter === 'bypass') return value ? 'Off' : 'On';
   if (typeof value === 'boolean') return value ? 'On' : 'Off';
   if (typeof value === 'string') return choiceLabels[value] || parameterLabel(value);
-  if (specFor(node, parameter, value).kind === 'slider') return formatNumber(value * 10);
+  const spec = specFor(node, parameter, value);
+  if (spec.kind === 'knob') return formatKnob(spec, value * spec.scale);
   return Number(value.toPrecision(4)).toLocaleString();
 }
 
@@ -699,8 +790,7 @@ function renderChanges(changes) {
       reset.setAttribute('aria-label', `Reset ${change.text}`);
       reset.addEventListener('click', () => {
         queueEdit(change.nodeId, change.parameter, change.saved);
-        const control = editorFields.querySelector(`[data-key="${CSS.escape(`${change.nodeId}/${change.parameter}`)}"]:not(.field)`);
-        if (control) writeControl(control, change.saved);
+        for (const control of controlsFor(`${change.nodeId}/${change.parameter}`)) writeControl(control, change.saved);
       });
       item.append(reset);
     }
@@ -713,7 +803,7 @@ function renderEditor() {
   $('waiting').hidden = available;
   editorFields.hidden = !available;
   if (!available) return;
-  if (!nodeById(selectedNode)) selectedNode = nodeById('amp') ? 'amp' : currentNodes()[0]?.nodeId;
+  if (selectedNode && !nodeById(selectedNode)) closeCloseup();
   if (formPreset !== known.preset) {
     nameInput.value = documentName();
     formPreset = known.preset;
@@ -721,8 +811,8 @@ function renderEditor() {
   const shape = shapeKey();
   if (shape !== builtKey) {
     const focusKey = editorFields.contains(document.activeElement) ? document.activeElement.dataset?.key : null;
-    buildChain();
-    buildPanel();
+    buildBoard();
+    buildCloseup();
     builtKey = shape;
     if (focusKey) restoreFocus(focusKey);
   }
@@ -734,24 +824,24 @@ function renderEditor() {
     field.classList.toggle('is-changed', changed);
     field.querySelector('.reset').hidden = !changed;
   }
-  for (const chip of $('chain').children) {
-    const node = nodeById(chip.dataset.node);
-    if (!node) continue;
-    chip.dataset.selected = String(chip.dataset.node === selectedNode);
-    chip.querySelector('.chip-main').setAttribute('aria-pressed', String(chip.dataset.node === selectedNode));
-    chip.dataset.off = String(node.dspUnitParameters.bypass === true);
-    setText(chip.querySelector('.chip-model'), node.FenderId === 'DUBS_Unknown' ? 'None' : modelName(node));
-    const title = chip.querySelector('.chip-title');
-    const edited = changes.some(change => change.nodeId === chip.dataset.node);
-    if (edited && !title.querySelector('.changed-dot')) {
-      const dot = document.createElement('span');
-      dot.className = 'changed-dot';
-      dot.title = 'Has unsaved changes';
-      title.append(dot);
-    } else if (!edited) {
-      title.querySelector('.changed-dot')?.remove();
-    }
+  for (const knob of editorFields.querySelectorAll('.knob')) {
+    knob.classList.toggle('is-changed', changedKeys.has(knob.querySelector('input').dataset.key));
   }
+  for (const dial of $('board').querySelectorAll('.mini-dial')) {
+    const [nodeId, parameter] = dial.dataset.mini.split('/');
+    const node = nodeById(nodeId);
+    const value = node?.dspUnitParameters[parameter];
+    if (typeof value !== 'number') continue;
+    const spec = specFor(node, parameter, value);
+    const shown = value * spec.scale;
+    dial.querySelector('.pointer').style.transform = `rotate(${knobAngle(shown, Math.min(spec.min, shown), Math.max(spec.max, shown))}deg)`;
+  }
+  for (const slot of $('board').children) {
+    const edited = changes.some(change => change.nodeId === slot.dataset.node);
+    slot.classList.toggle('has-changes', edited);
+  }
+  const undo = $('closeup-undo');
+  if (undo) undo.hidden = !changes.some(change => change.nodeId === selectedNode && change.parameter);
   renderChanges(changes);
   setText($('name-count'), `${nameInput.value.length}/16`);
   editorFields.disabled = !state.connected || exclusive;
@@ -763,6 +853,11 @@ function renderStatus() {
   const unsaved = state.connected && hasChanges();
   setText($('dirty'), !unsaved ? '' : count > 1 ? `${count} unsaved changes` : count === 1 ? '1 unsaved change' : 'Unsaved changes');
   setText($('sync'), editsWaiting() ? 'Sending to the amp…' : '');
+  const problem = $('message').dataset.kind === 'error' && !$('message').hidden ? $('message').textContent : '';
+  const closeupStatus = $('closeup-status');
+  setText(closeupStatus, !state.connected ? "The amp isn't connected, so these controls are paused until it's back."
+    : problem || (editsWaiting() ? 'Sending to the amp…' : exclusive ? 'Changing…' : ''));
+  closeupStatus.dataset.kind = !state.connected || problem ? 'error' : '';
   const usable = state.connected && !exclusive;
   $('save').disabled = !usable || !hasChanges() || !nameInput.value.trim();
   $('save-copy').disabled = !usable;
@@ -825,6 +920,12 @@ function render() {
   if (grid.querySelector('[aria-current="true"]')?.dataset.preset !== previousActive) scrollToActive();
 }
 
+// Close-up -----------------------------------------------------------------------
+function closeCloseup() {
+  if ($('closeup').open) $('closeup').close();
+  else selectedNode = null;
+}
+
 // Narrow-screen preset drawer ------------------------------------------------
 function openDrawer() {
   document.body.classList.add('drawer-open');
@@ -845,6 +946,16 @@ window.addEventListener('pointerup', () => { dragging = null; });
 window.addEventListener('pointercancel', () => { dragging = null; });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) readState(); });
 
+$('closeup-close').addEventListener('click', closeCloseup);
+$('closeup').addEventListener('close', () => {
+  const opened = selectedNode;
+  selectedNode = null;
+  builtKey = '';
+  renderEditor();
+  $('board').querySelector(`[data-node="${opened}"] button`)?.focus({ preventScroll: true });
+});
+// Selecting the dimmed area around the close-up closes it; the backdrop's clicks land on the dialog itself.
+$('closeup').addEventListener('click', event => { if (event.target === $('closeup')) closeCloseup(); });
 $('open-presets').addEventListener('click', openDrawer);
 $('close-presets').addEventListener('click', closeDrawer);
 $('scrim').addEventListener('click', closeDrawer);

@@ -96,27 +96,47 @@ main { overflow-y: auto; min-width: 0; padding: 18px 20px 28px; }
 #sync { font-size: 13px; color: var(--muted); }
 .hint { font-size: 13px; margin: 8px 0 16px; }
 
-#chain { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 16px; overflow-x: auto;
-  padding: 4px 4px 8px; margin: 0 -4px; }
-.chip { position: relative; display: flex; flex-direction: column; background: var(--surface);
-  border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
-.chip:not(:last-child)::after { content: "→"; position: absolute; right: -14px; top: 22px; width: 12px; text-align: center;
-  color: var(--muted); font-size: 12px; }
-.chip-main { display: block; width: 100%; border: 0; border-radius: 8px 8px 0 0; background: none; padding: 8px 10px; text-align: left; flex: 1; }
-.chip-main .chip-title { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
-.chip-main .chip-model { display: block; font-weight: 600; overflow-wrap: anywhere; line-height: 1.25; margin-top: 2px; }
-.chip[data-selected="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.chip[data-off="true"] .chip-model { color: var(--muted); font-weight: 400; text-decoration: line-through; }
-.chip-power { display: flex; align-items: center; gap: 6px; padding: 5px 10px 7px; font-size: 13px; cursor: pointer;
-  border-top: 1px solid var(--line); }
-.chip-power.always-on { color: var(--muted); cursor: default; }
-.changed-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+/* The board: a dark mat in either theme, with a cable running between the positions. */
+#board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.5fr) repeat(2, minmax(0, 1fr)); gap: 22px;
+  align-items: center; padding: 26px 22px; background: #26241f; border-radius: 12px; }
+.slot { position: relative; min-width: 0; }
+.slot:not(:last-child)::after { content: ""; position: absolute; z-index: 0; top: 50%; right: -23px; width: 24px; height: 6px;
+  margin-top: -3px; background: #0d0c0a; border-block: 1px solid #8a867c; }
+.pedal.board-pedal { width: 100%; max-width: none; }
+.board-pedal .jack, .board-pedal .screw { display: none; }
+.board-pedal .face { padding: 12px 8px 12px; border-radius: 12px; box-shadow: inset 0 1px 0 rgb(255 255 255/.35),
+  inset 0 -2px 0 rgb(0 0 0/.3), 0 6px 12px rgb(0 0 0/.5); }
+.slot.has-changes .board-pedal .face { outline: 2px solid var(--warn); outline-offset: 2px; }
+.open-pedal { display: flex; flex-direction: column; align-items: center; width: 100%; min-height: 0; padding: 4px 2px;
+  border: 0; border-radius: 8px; background: none; color: inherit; cursor: pointer; }
+.open-pedal:hover:not(:disabled) { background: rgb(0 0 0/.12); }
+.mini-dials { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; min-height: 30px; }
+.mini-dial { position: relative; width: 30px; height: 30px; }
+.mini-dial img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.board-pedal .light { display: block; width: 12px; height: 12px; margin: 8px auto 0; }
+.board-pedal .name { margin-top: 6px; font-size: 14px; line-height: 1.2; overflow-wrap: break-word; }
+.board-pedal .kind { font-size: 12px; font-weight: 500; }
+.board-pedal .foot { width: 54px; height: 54px; margin-top: 6px; }
+.empty-position { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 150px; padding: 10px;
+  border: 2px dashed #6b675f; border-radius: 12px; background: none; color: #D3D1C7; text-align: center; font-size: 14px; }
+.empty-position:hover:not(:disabled) { background: rgb(255 255 255/.06); }
 
-#module-panel { margin-top: 8px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
-.panel-title { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
-.panel-title h3 { font-size: 18px; }
-.panel-title select { min-width: 200px; max-width: 100%; }
-.fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 24px; }
+#closeup { width: min(460px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 24px); padding: 0; overflow-y: auto; animation: closeup-in .16s ease-out; }
+@keyframes closeup-in { from { opacity: 0; transform: scale(.94); } }
+#closeup-inner { padding: 16px 18px 20px; }
+.closeup-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+#closeup h2 { margin: 0; font-size: 19px; }
+#closeup-kind { color: var(--muted); font-size: 13px; }
+#closeup-status { min-height: 20px; margin: 4px 0; font-size: 13px; color: var(--muted); }
+#closeup-status[data-kind="error"] { color: var(--error); }
+.closeup-stage { display: flex; justify-content: center; padding: 8px 0 16px; }
+.knob-tip { margin-bottom: 12px; font-size: 13px; color: var(--muted); text-align: center; }
+#closeup-undo { display: block; margin: 0 auto 12px; }
+.knob.is-changed .knob-label::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 4px;
+  border-radius: 50%; background: currentColor; vertical-align: 1px; }
+.model-picker { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+.model-picker select { flex: 1; min-width: 0; font-weight: 400; }
+.fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px 20px; margin-bottom: 12px; }
 .field-head { display: flex; align-items: center; gap: 6px; min-height: 24px; font-size: 14px; }
 .field-head label { flex: 1; min-width: 0; }
 .field-head output { font-variant-numeric: tabular-nums; font-weight: 600; }
@@ -124,9 +144,8 @@ main { overflow-y: auto; min-width: 0; padding: 18px 20px 28px; }
 .field input:not([type=checkbox]):not([type=range]), .field select { width: 100%; }
 .field.toggle-field label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 button.reset { min-height: 24px; padding: 0 7px; font-size: 12px; }
-#advanced { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+#advanced { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
 #advanced summary { cursor: pointer; font-weight: 600; margin-bottom: 10px; }
-.no-controls { color: var(--muted); }
 
 #changes { margin-top: 12px; font-size: 14px; }
 #changes summary { cursor: pointer; color: var(--warn); font-weight: 600; }
@@ -165,12 +184,21 @@ dialog input, dialog select { width: 100%; }
   #scrim { position: fixed; inset: 0; z-index: 15; background: rgb(0 0 0 / 40%); display: block; }
   main { overflow: visible; padding: 14px 16px 24px; }
   #preset-name { flex: 1 1 140px; width: auto; min-width: 0; }
-  #chain { display: flex; scroll-snap-type: x proximity; }
-  .chip { flex: 0 0 132px; scroll-snap-align: start; }
-  #module-panel { padding: 14px; }
+  /* The cable snakes: across, down through the amp, then back across. */
+  #board { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 22px; padding: 18px 14px; }
+  .slot[data-node="stomp"] { grid-area: 1 / 1; }
+  .slot[data-node="mod"] { grid-area: 1 / 2; }
+  .slot[data-node="amp"] { grid-area: 2 / 1 / 3 / 3; }
+  .slot[data-node="delay"] { grid-area: 3 / 2; }
+  .slot[data-node="reverb"] { grid-area: 3 / 1; }
+  .slot[data-node="mod"]::after, .slot[data-node="amp"]::after { top: 100%; right: 25%; width: 6px; height: 25px; margin: 0;
+    border-block: 0; border-inline: 1px solid #8a867c; }
+  .slot[data-node="delay"]::after { right: auto; left: -23px; }
+  .empty-position { min-height: 110px; }
   .preset { min-height: 44px; }
   .shortcuts { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   #preset-panel { transition: none !important; }
+  #closeup { animation: none; }
 }
