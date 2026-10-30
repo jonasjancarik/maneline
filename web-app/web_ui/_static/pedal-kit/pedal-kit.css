@@ -1,0 +1,31 @@
+.pedal{position:relative;width:300px;max-width:calc(100% - 48px)}
+.jack{position:absolute;top:96px;width:46px}
+.jack.left{left:-30px}
+.jack.right{right:-30px;transform:scaleX(-1)}
+.face{position:relative;padding:18px 16px 28px;border-radius:18px;background-color:var(--tint);background-image:url(surface.jpg);background-size:cover;background-blend-mode:multiply;box-shadow:inset 0 1px 0 rgb(255 255 255/.35),inset 0 -2px 0 rgb(0 0 0/.3),inset 2px 0 0 rgb(255 255 255/.08),inset -2px 0 0 rgb(0 0 0/.12),0 10px 22px rgb(0 0 0/.55);color:#17110a}
+.off .face{background-image:linear-gradient(#8f8f8f,#8f8f8f),url(surface.jpg);color:#FAECE7}
+.screw{position:absolute;width:15px;filter:drop-shadow(0 1px 1px rgb(0 0 0/.5))}
+.screw.tl{top:9px;left:9px}.screw.tr{top:9px;right:9px}.screw.bl{bottom:9px;left:9px}.screw.br{bottom:9px;right:9px}
+.knobs{display:flex;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.knob{position:relative;flex:0 0 33.33%;display:flex;flex-direction:column;align-items:center;min-width:0}
+.readout{height:20px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;visibility:hidden}
+.knob.active .readout{visibility:visible}
+.knob input{position:absolute;width:1px;height:1px;opacity:0;margin:0}
+.dial{position:relative;width:84px;height:84px;border-radius:50%;cursor:grab;touch-action:none;user-select:none}
+.dial:active{cursor:grabbing}
+.knob input:focus-visible+.dial{outline:3px solid #FAECE7;outline-offset:1px}
+.marks{position:absolute;inset:0;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.body,.pointer{position:absolute;inset:11px;width:62px;height:62px;pointer-events:none}
+.body{filter:drop-shadow(0 3px 3px rgb(0 0 0/.55))}
+.knob-label{font-size:13px;font-weight:600;margin-top:2px}
+.light{position:relative;width:20px;height:20px;margin:14px auto 0;border-radius:50%;filter:drop-shadow(0 1px 1px rgb(0 0 0/.5))}
+.light img{position:absolute;inset:0;width:100%;height:100%}
+.pedal:not(.off) .light{box-shadow:0 0 12px 3px rgb(255 60 30/.55)}
+.pedal:not(.off) .unlit,.off .lit{visibility:hidden}
+.name{margin-top:12px;text-align:center;font-size:21px;font-weight:600;letter-spacing:.01em}
+.foot{position:relative;display:block;width:92px;height:92px;margin:14px auto 0;padding:0;border:0;border-radius:50%;background:none;cursor:pointer;filter:drop-shadow(0 4px 4px rgb(0 0 0/.5))}
+.foot img{position:absolute;inset:0;width:100%;height:100%}
+.foot .pressed{visibility:hidden}
+.foot:active .pressed{visibility:visible}
+.foot:active .raised{visibility:hidden}
+.foot:focus-visible{outline:3px solid #FAECE7;outline-offset:2px}

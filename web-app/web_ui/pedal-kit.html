@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pedal parts preview · Maneline</title>
+  <link rel="stylesheet" href="/web_ui/_static/pedal-kit/pedal-kit.css">
+  <link rel="icon" href="/web_ui/_static/maneline-icon-512x512.png">
+  <style>body{margin:0;min-height:100vh;background:#26241f;display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;gap:56px 72px;padding:48px 16px;box-sizing:border-box;font:15px/1.4 system-ui,sans-serif}</style>
+</head>
+<body>
+<script src="/web_ui/_static/pedal-kit/pedal-kit.js"></script>
+<script>
+document.body.append(buildPedal({
+  name: 'Mythic Drive',
+  colour: '#fe6a38',
+  knobs: [{ label: 'Gain', value: 5 }, { label: 'Treble', value: 4.3 }, { label: 'Output', value: 7.5 }],
+}), buildPedal({
+  name: 'Flanger',
+  colour: '#2bc4a0',
+  knobs: [{ label: 'Rate', value: 1 }, { label: 'Depth', value: 10 }, { label: 'Phase', value: 2.5 },
+    { label: 'Feedback', value: 2 }, { label: 'Level', value: 10 }],
+}));
+</script>
+</body>
+</html>
