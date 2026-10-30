@@ -32,6 +32,7 @@ class MicroPlusSession:
         self.lock = asyncio.Lock()
         self.reset = asyncio.Event()
         self.last_save = None
+        self.last_undo = None
         self.generation = 0
 
     def snapshot(self):
@@ -47,7 +48,8 @@ class MicroPlusSession:
                 'document': getattr(controller, 'document', None) if connected else None,
                 'revision': f'{self.generation}:{getattr(controller, "document_revision", 0)}' if connected else None,
                 'dirty': bool(getattr(controller, 'dirty', False)) if connected else False,
-                'models': MODELS, 'parameter_choices': PARAMETER_CHOICES, 'unscaled': UNSCALED, 'last_save': self.last_save}
+                'models': MODELS, 'parameter_choices': PARAMETER_CHOICES, 'unscaled': UNSCALED, 'last_save': self.last_save,
+                'last_undo': self.last_undo}
 
     def require_controller(self):
         if not self.controller or not self.client or not self.client.is_connected:
@@ -63,10 +65,13 @@ class MicroPlusSession:
         return controller
 
     def unconfirmed(self, action):
-        self.error = (
-            'The save could not be verified. Reconnecting to read the device; check the result before saving again.'
-            if action == 'save' else
-            f'The Micro Plus did not confirm the {action}. Reconnecting to read its current settings.')
+        messages = {
+            'save': 'The save could not be verified. Reconnecting to read the device; check the result before saving again.',
+            'undo': 'The undo could not be verified. Reconnecting to read the device; check the result before saving again.',
+            'preset selection': 'The Micro Plus did not confirm the switch, so it may already be on the new preset. '
+                                'Reconnecting to check.'}
+        self.error = messages.get(action, f'The Micro Plus did not confirm the {action}. '
+                                          'Reconnecting to read its current settings.')
         self.controller = None
         self.reset.set()
         return RuntimeError(self.error)
@@ -146,6 +151,33 @@ class MicroPlusSession:
                 raise
             except Exception:
                 raise self.unconfirmed('save') from None
+
+    async def undo_save(self, slot, revision):
+        async with self.lock:
+            controller = self.require_editor(slot, revision)
+            save = self.last_save
+            if not save:
+                raise ValueError('There is no recent save to undo.')
+            target = save['preset']
+            backup = json.loads((self.backup_dir / save['backup']).read_text(encoding='utf-8'))
+            if backup.get('slot') != target:
+                raise ValueError('That backup belongs to a different preset, so nothing was changed.')
+            try:
+                replaced = await controller.read_preset(target)
+                safety = self.backup(target, replaced)  # Undo must itself be recoverable.
+                self.require_editor(slot, revision)
+                await controller.restore_preset(backup['preset'], target)
+                if target == controller.slot:
+                    # The amp keeps playing its live copy until the slot is selected again.
+                    await controller.switch(target)
+                await controller.refresh_current()
+                self.last_save = None
+                self.last_undo = {'preset': target, 'backup': safety, 'time': time.time()}
+                return self.snapshot()
+            except (ValueError, OSError):
+                raise
+            except Exception:
+                raise self.unconfirmed('undo') from None
 
     async def keep_alive(self, controller):
         try:

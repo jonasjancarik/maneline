@@ -55,8 +55,10 @@ async def dispatch(method, path, headers, body, session, allowed_hosts=None):
                 elif action == 'save' and set(request) == common | {'target', 'name'}:
                     state = await session.save(request['preset'], request['revision'],
                                                request['target'], request['name'])
+                elif action == 'undo-save' and set(request) == common:
+                    state = await session.undo_save(request['preset'], request['revision'])
                 else:
-                    raise ValueError('Choose a parameter, model, or save operation.')
+                    raise ValueError('Choose a parameter, model, save or undo operation.')
         except EditorConflict as error:
             raise HTTPError(409, str(error)) from error
         except OSError as error:
@@ -76,7 +78,7 @@ async def dispatch(method, path, headers, body, session, allowed_hosts=None):
     return 200, mimetypes.guess_type(target.name)[0] or 'application/octet-stream', target.read_bytes()
 
 
-async def handle(reader, writer, session, allowed_hosts=None):
+async def handle(reader, writer, session, allowed_hosts=None, dispatcher=dispatch):
     try:
         async with asyncio.timeout(40):
             raw = await reader.readuntil(b'\r\n\r\n')
@@ -98,7 +100,7 @@ async def handle(reader, writer, session, allowed_hosts=None):
             if not 0 <= length <= 1024:
                 raise HTTPError(413, 'Request body is too large.')
             body = await reader.readexactly(length)
-            status, content_type, result = await dispatch(
+            status, content_type, result = await dispatcher(
                 method, urlsplit(target).path, headers, body, session, allowed_hosts)
     except HTTPError as error:
         status, content_type, result = error.status, 'application/json', json.dumps({'error': error.message}).encode()

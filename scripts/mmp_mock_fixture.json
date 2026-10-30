@@ -1,0 +1,335 @@
+{
+ "names": [
+  "Driven Deluxe",
+  "Stadium Lead",
+  "Swirling Echoes",
+  "Metal 2000",
+  "BB15 Solo",
+  "Hey Jimi",
+  "Twin Trem",
+  "Vibra Drive",
+  "Uber Metal",
+  "Octobot",
+  "Harmonic Vibrato",
+  "FBE100",
+  "Lavender Rain",
+  "Acoustic Gtr Sim",
+  "Stereo Delay",
+  "Tweed Sugar",
+  "Wild Nocturne",
+  "70S Rock",
+  "80S Rock",
+  "90S Rock",
+  "Echo Dome",
+  "Broken",
+  "Brit Colour",
+  "Super Live",
+  "Fired Up Lead",
+  "Year 2290",
+  "Boosted Brit",
+  "Pigs Can Fly",
+  "Tweed Blues",
+  "Brit Pop",
+  "Country Twang",
+  "Surfy",
+  "Pawn King",
+  "BB15 Low",
+  "BB15 Mid",
+  "BB15 Hi",
+  "Buckaroo",
+  "Blues 1951",
+  "Derek Champ",
+  "Pop Chorus",
+  "Jazz Clean",
+  "Super Burn",
+  "Dirty Flanger",
+  "Cranked Prince",
+  "Sustaind",
+  "Fuzzy Deluxe",
+  "Spoonful",
+  "65 Twin Reverb",
+  "65 Dlx Reverb",
+  "65 Princ Reverb",
+  "57 Champ",
+  "57 Dlx Fat",
+  "Bassman Beef",
+  "Silver Tone",
+  "Brit Stk Clean",
+  "DI Funk",
+  "Sun Session",
+  "57 Twin",
+  "Phased",
+  "Irish Anthems",
+  "Studio Pre",
+  "Angry Rodent",
+  "Blk Hole Vibe",
+  "Single Scoop",
+  "Early Eddie",
+  "Vintage Throb",
+  "Loud As Leeds",
+  "Evil Bassman",
+  "Filtered Echoes",
+  "Rock a Billy",
+  "EMPTY",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "Empty",
+  "MMP Editor Test"
+ ],
+ "active": 17,
+ "document": {
+  "nodeType": "preset",
+  "nodeId": "preset",
+  "version": "1.1",
+  "numInputs": 2,
+  "numOutputs": 2,
+  "info": {
+   "displayName": "Wild Nocturne",
+   "preset_id": "0d2144f3-c379-4d8e-800f-ee49f69a985b",
+   "author": "",
+   "source_id": "",
+   "timestamp": 0.0,
+   "created_at": 0.0,
+   "product_id": "mustang-ltx",
+   "is_factory_default": true,
+   "bpm": 0.0
+  },
+  "audioGraph": {
+   "nodes": [
+    {
+     "nodeId": "stomp",
+     "nodeType": "dspUnit",
+     "FenderId": "ACD_CompressorSimple",
+     "dspUnitParameters": {
+      "bypass": false,
+      "bypassType": "Post",
+      "comppreset": 1
+     }
+    },
+    {
+     "nodeId": "mod",
+     "nodeType": "dspUnit",
+     "FenderId": "ACD_FlangerTriangle",
+     "dspUnitParameters": {
+      "bypass": false,
+      "bypassType": "Post",
+      "ratehz": 0.10999999940395355,
+      "depth": 1.0,
+      "lrphase": 0.25,
+      "fdbklvl": 0.20000000298023224,
+      "wetlvl": 1.0,
+      "tapTimeBPM": 120.0,
+      "noteDivision": "off"
+     }
+    },
+    {
+     "nodeId": "amp",
+     "nodeType": "dspUnit",
+     "FenderId": "ACD_Twin65GT",
+     "dspUnitParameters": {
+      "volume": -23.5,
+      "gatePreset": "low",
+      "cabsimType": "65twn",
+      "gain": 0.48888900876045227,
+      "bass": 0.6627449989318848,
+      "mid": 0.7803919911384583,
+      "treb": 0.6026470065116882,
+      "bias": 0.5,
+      "sag": 1,
+      "brightsw": true
+     }
+    },
+    {
+     "nodeId": "delay",
+     "nodeType": "dspUnit",
+     "FenderId": "ACD_ModDelay",
+     "dspUnitParameters": {
+      "bypass": false,
+      "bypassType": "Pre",
+      "mix": 0.3700000047683716,
+      "feedback": 0.4350000023841858,
+      "fblowcut": 0.0,
+      "fbhighcut": 0.0,
+      "dlytime": 0.46031299233436584,
+      "modratehz": 0.20000000298023224,
+      "moddepth": 0.30000001192092896,
+      "dlymodtype": 0,
+      "panratehz": 8.119000434875488,
+      "pandepth": 0.0,
+      "panmodtype": 0,
+      "tapTimeBPM": 120.0,
+      "noteDivision": "off"
+     }
+    },
+    {
+     "nodeId": "reverb",
+     "nodeType": "dspUnit",
+     "FenderId": "ACD_FenderLargeModulatedHall",
+     "dspUnitParameters": {
+      "bypass": false,
+      "bypassType": "Pre",
+      "wetlvl": -13.807184219360352,
+      "decay": 0.75,
+      "dwell": 0.7300000190734863,
+      "diffuse": 0.5888000130653381,
+      "tone": 0.6888999938964844,
+      "depth": 0.3887999951839447,
+      "ratehz": 3.299999952316284,
+      "lowcut": 0.5
+     }
+    }
+   ],
+   "connections": [
+    {
+     "input": {
+      "nodeId": "preset",
+      "index": 0
+     },
+     "output": {
+      "nodeId": "mod",
+      "index": 0
+     }
+    },
+    {
+     "input": {
+      "nodeId": "preset",
+      "index": 1
+     },
+     "output": {
+      "nodeId": "mod",
+      "index": 1
+     }
+    },
+    {
+     "input": {
+      "nodeId": "mod",
+      "index": 0
+     },
+     "output": {
+      "nodeId": "stomp",
+      "index": 0
+     }
+    },
+    {
+     "input": {
+      "nodeId": "mod",
+      "index": 1
+     },
+     "output": {
+      "nodeId": "stomp",
+      "index": 1
+     }
+    },
+    {
+     "input": {
+      "nodeId": "stomp",
+      "index": 0
+     },
+     "output": {
+      "nodeId": "amp",
+      "index": 0
+     }
+    },
+    {
+     "input": {
+      "nodeId": "stomp",
+      "index": 1
+     },
+     "output": {
+      "nodeId": "amp",
+      "index": 1
+     }
+    },
+    {
+     "input": {
+      "nodeId": "amp",
+      "index": 0
+     },
+     "output": {
+      "nodeId": "delay",
+      "index": 0
+     }
+    },
+    {
+     "input": {
+      "nodeId": "amp",
+      "index": 1
+     },
+     "output": {
+      "nodeId": "delay",
+      "index": 1
+     }
+    },
+    {
+     "input": {
+      "nodeId": "delay",
+      "index": 0
+     },
+     "output": {
+      "nodeId": "reverb",
+      "index": 0
+     }
+    },
+    {
+     "input": {
+      "nodeId": "delay",
+      "index": 1
+     },
+     "output": {
+      "nodeId": "reverb",
+      "index": 1
+     }
+    },
+    {
+     "input": {
+      "nodeId": "reverb",
+      "index": 0
+     },
+     "output": {
+      "nodeId": "preset",
+      "index": 0
+     }
+    },
+    {
+     "input": {
+      "nodeId": "reverb",
+      "index": 1
+     },
+     "output": {
+      "nodeId": "preset",
+      "index": 1
+     }
+    }
+   ]
+  },
+  "modifiable": {
+   "nodeId": "delay",
+   "parameterId": "mix"
+  }
+ }
+}

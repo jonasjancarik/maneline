@@ -137,6 +137,75 @@ class EditorTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(presets_match(expected, actual))
 
 
+class UndoSaveTests(unittest.IsolatedAsyncioTestCase):
+    def session(self, directory, slot=100, target=100):
+        session = MicroPlusSession('device-id', backup_dir=directory)
+        controller = types.SimpleNamespace(slot=slot, document_slot=slot, document=preset_fixture(),
+            document_revision=4, dirty=False, names=['Test'] * 100, status=lambda: {'name': 'Test'},
+            read_preset=AsyncMock(return_value=preset_fixture()), restore_preset=AsyncMock(),
+            switch=AsyncMock(), refresh_current=AsyncMock())
+        session.controller = controller
+        session.client = types.SimpleNamespace(is_connected=True)
+        session.generation = 2
+        previous = preset_fixture()
+        previous['info']['displayName'] = 'Before save'
+        name = session.backup(target, previous)
+        session.last_save = {'preset': target, 'name': 'Edited', 'backup': name, 'verified': True, 'time': 1}
+        return session
+
+    async def test_undo_restores_backup_and_backs_up_what_it_replaces(self):
+        with tempfile.TemporaryDirectory() as directory:
+            session = self.session(directory)
+            result = await session.undo_save(100, '2:4')
+            restored, target = session.controller.restore_preset.call_args.args
+            self.assertEqual((restored['info']['displayName'], target), ('Before save', 100))
+            self.assertEqual(len(list(Path(directory).glob('*.json'))), 2)
+            self.assertIsNone(result['last_save'])
+            self.assertEqual(result['last_undo']['preset'], 100)
+
+    async def test_undo_reselects_active_slot_but_not_another_slot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            active = self.session(directory)
+            await active.undo_save(100, '2:4')
+            active.controller.switch.assert_awaited_once_with(100)
+        with tempfile.TemporaryDirectory() as directory:
+            other = self.session(directory, slot=17, target=100)
+            await other.undo_save(17, '2:4')
+            other.controller.switch.assert_not_awaited()
+
+    async def test_failed_safety_backup_prevents_undo(self):
+        with tempfile.TemporaryDirectory() as directory:
+            session = self.session(directory)
+            session.backup = Mock(side_effect=OSError('disk full'))
+            with self.assertRaises(OSError):
+                await session.undo_save(100, '2:4')
+            session.controller.restore_preset.assert_not_awaited()
+            self.assertIsNotNone(session.last_save)
+
+    async def test_undo_without_a_save_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            session = self.session(directory)
+            session.last_save = None
+            with self.assertRaises(ValueError):
+                await session.undo_save(100, '2:4')
+            session.controller.restore_preset.assert_not_awaited()
+
+    async def test_undo_rejects_stale_editor_and_is_routed_over_http(self):
+        with tempfile.TemporaryDirectory() as directory:
+            session = self.session(directory)
+            headers = {'host': 'localhost:8080', 'origin': 'http://localhost:8080',
+                       'content-type': 'application/json'}
+            stale = json.dumps({'action': 'undo-save', 'preset': 100, 'revision': 'old'}).encode()
+            with self.assertRaises(HTTPError) as caught:
+                await dispatch('POST', '/api/micro-plus/editor', headers, stale, session)
+            self.assertEqual(caught.exception.status, 409)
+            session.controller.restore_preset.assert_not_awaited()
+            body = json.dumps({'action': 'undo-save', 'preset': 100, 'revision': '2:4'}).encode()
+            code, _, _ = await dispatch('POST', '/api/micro-plus/editor', headers, body, session)
+            self.assertEqual(code, 200)
+            session.controller.restore_preset.assert_awaited_once()
+
+
 class CopyAndTypeTests(unittest.IsolatedAsyncioTestCase):
     async def test_save_as_assigns_new_identity_without_mutating_source(self):
         controller = Controller(types.SimpleNamespace(is_connected=True), None)
