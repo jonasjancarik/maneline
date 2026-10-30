@@ -2,8 +2,8 @@
 
 Shared parts for drawing pedals in the browser. `buildPedal()` in `pedal-kit.js`
 assembles a pedal from a name, a colour and a list of knobs, so a new pedal needs
-no new artwork. `web_ui/pedal-kit.html` previews two examples. The Micro Plus
-editor doesn't use these parts yet.
+no new artwork. `web_ui/pedal-kit.html` previews two examples, and the Micro Plus
+editor builds its board and close-ups from the same parts.
 
 The images were generated with Codex image generation in October 2026, from
 written descriptions of generic hardware with no brand, logo or commercial pedal
