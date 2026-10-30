@@ -129,7 +129,9 @@ async function pumpEdits() {
   epoch++;
   renderStatus();
   try {
-    adopt(await post(EDITOR_API, { action: 'parameter', ...guard(), ...edit }));
+    const reply = await post(EDITOR_API, { action: 'parameter', ...guard(), ...edit });
+    adopt(reply);
+    if (reply.limited) showLimited(reply.limited);
   } catch (error) {
     pendingEdits.clear();
     showMessage(failureText(error), 'error');
@@ -141,6 +143,11 @@ async function pumpEdits() {
     pumpEdits();
     if (!editsWaiting()) readState();
   }
+}
+
+function showLimited({ node: nodeId, parameter, stored }) {
+  const node = nodeById(nodeId);
+  if (node) showMessage(`${knobLabel(parameter)} stopped at ${describeValue(node, parameter, stored)}, which is as far as the amp goes here.`);
 }
 
 function editsIdle() {
@@ -853,10 +860,11 @@ function renderStatus() {
   const unsaved = state.connected && hasChanges();
   setText($('dirty'), !unsaved ? '' : count > 1 ? `${count} unsaved changes` : count === 1 ? '1 unsaved change' : 'Unsaved changes');
   setText($('sync'), editsWaiting() ? 'Sending to the amp…' : '');
-  const problem = $('message').dataset.kind === 'error' && !$('message').hidden ? $('message').textContent : '';
+  const note = $('message').hidden ? '' : $('message').textContent;
+  const problem = $('message').dataset.kind === 'error' ? note : '';
   const closeupStatus = $('closeup-status');
   setText(closeupStatus, !state.connected ? "The amp isn't connected, so these controls are paused until it's back."
-    : problem || (editsWaiting() ? 'Sending to the amp…' : exclusive ? 'Changing…' : ''));
+    : note || (editsWaiting() ? 'Sending to the amp…' : ''));
   closeupStatus.dataset.kind = !state.connected || problem ? 'error' : '';
   const usable = state.connected && !exclusive;
   $('save').disabled = !usable || !hasChanges() || !nameInput.value.trim();

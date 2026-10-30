@@ -96,8 +96,11 @@ class MicroPlusSession:
             if not isinstance(node, str) or not isinstance(parameter, str):
                 raise ValueError('Choose an amplifier or effect parameter.')
             try:
-                await controller.set_parameter(node, parameter, value)
-                return self.snapshot()
+                limited = await controller.set_parameter(node, parameter, value)
+                snapshot = self.snapshot()
+                if limited is not None:
+                    snapshot['limited'] = {'node': node, 'parameter': parameter, 'requested': value, 'stored': limited}
+                return snapshot
             except ValueError:
                 raise
             except Exception:

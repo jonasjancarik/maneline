@@ -339,13 +339,22 @@ class Controller:
         await self.command(SET_PARAMETER, parameter_payload(node_id, parameter, value))
         await self.wait_for(lambda: self.parameter_revision > revision and key in self.parameters)
         reported = self.parameters[key]
-        if type(value) is float:
-            matches = type(reported) in (int, float) and math.isclose(value, reported, rel_tol=1e-5, abs_tol=1e-5)
-        else:
-            matches = value == reported
-        if not matches:
+        limited = False
+        if type(value) in (int, float):
+            # The amp keeps numbers within its own limits and reports what it stored, which isn't a failure.
+            if type(reported) not in (int, float) or not math.isfinite(reported):
+                raise RuntimeError('The Micro Plus reported a different parameter value')
+            limited = not math.isclose(value, reported, rel_tol=1e-5, abs_tol=1e-5)
+        elif value != reported:
             raise RuntimeError('The Micro Plus reported a different parameter value')
         await self.refresh_current()
+        if not limited:
+            return None
+        # The value differs from the one sent, so make sure the preset itself agrees before accepting it.
+        stored = self.get_parameter(node_id, parameter)
+        if type(stored) not in (int, float) or not math.isclose(stored, reported, rel_tol=1e-4, abs_tol=1e-4):
+            raise RuntimeError('The Micro Plus reported a different parameter value')
+        return reported
 
     async def replace_node(self, node_id, model):
         revision = self.replace_revision

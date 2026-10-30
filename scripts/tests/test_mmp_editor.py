@@ -246,5 +246,54 @@ class CopyAndTypeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([kind for kind, _ in sent], [11, 20])
 
 
+class LimitedValueTests(unittest.IsolatedAsyncioTestCase):
+    # On a real amp a Delay Time of 0.02 s is stored as 0.03 s, which used to drop the connection.
+    def controller(self, reports, preset_holds):
+        controller = Controller(types.SimpleNamespace(is_connected=True), None)
+        controller.slot = controller.document_slot = 100
+        controller.document = preset_fixture()
+        parameters = controller.document['audioGraph']['nodes'][0]['dspUnitParameters']
+        parameters['gain'] = 0.5
+
+        async def command(kind, payload):
+            controller.parameters[('amp', 'gain')] = 0.5 if kind == 11 else reports
+            controller.parameter_types[('amp', 'gain')] = 2
+            controller.parameter_revision += 1
+
+        async def refresh_current():
+            parameters['gain'] = preset_holds
+
+        controller.command = command
+        controller.refresh_current = refresh_current
+        return controller
+
+    async def test_a_value_the_amp_limits_returns_what_it_stored(self):
+        controller = self.controller(reports=0.03, preset_holds=0.03)
+        self.assertEqual(await controller.set_parameter('amp', 'gain', 0.02), 0.03)
+
+    async def test_a_value_stored_as_sent_is_not_reported_as_limited(self):
+        controller = self.controller(reports=0.7, preset_holds=0.7)
+        self.assertIsNone(await controller.set_parameter('amp', 'gain', 0.7))
+
+    async def test_a_limit_the_preset_does_not_confirm_still_fails(self):
+        controller = self.controller(reports=0.03, preset_holds=0.5)
+        with self.assertRaises(RuntimeError):
+            await controller.set_parameter('amp', 'gain', 0.02)
+
+    async def test_a_reply_that_is_not_a_number_still_fails(self):
+        controller = self.controller(reports='low', preset_holds=0.5)
+        with self.assertRaises(RuntimeError):
+            await controller.set_parameter('amp', 'gain', 0.02)
+
+    async def test_session_keeps_the_connection_and_says_what_was_stored(self):
+        with tempfile.TemporaryDirectory() as directory:
+            session = EditorTests.session(self, directory)
+            session.controller.set_parameter = AsyncMock(return_value=0.03)
+            state = await session.edit(100, '2:4', 'amp', 'gain', 0.02)
+            self.assertIsNotNone(session.controller)
+            self.assertIsNone(session.error)
+            self.assertEqual(state['limited'], {'node': 'amp', 'parameter': 'gain', 'requested': 0.02, 'stored': 0.03})
+
+
 if __name__ == '__main__':
     unittest.main()

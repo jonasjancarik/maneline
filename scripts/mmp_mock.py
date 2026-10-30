@@ -7,6 +7,7 @@ Nothing here touches Bluetooth. Control the simulation from a browser or curl:
   /__mock/mode/fail          the next writes are not confirmed
   /__mock/mode/stall         the next switch reaches the amp but is not confirmed
   /__mock/knob/5             someone turns the knob on the amp to preset 5
+  /__mock/limit/delay/feedback/0.3  the amp stores no more than 0.3 for that setting
   /__mock/requests           every write the page has sent
 """
 import argparse
@@ -40,6 +41,7 @@ class MockSession:
         self.last_undo = None
         self.backups = {}
         self.requests = []
+        self.limits = {}
 
     def read(self, slot):
         if slot not in self.stored:
@@ -129,10 +131,15 @@ class MockSession:
         parameters = self.node(node)['dspUnitParameters']
         if parameter not in parameters:
             raise ValueError('This parameter is not present in the selected preset')
-        parameters[parameter] = value
+        limit = self.limits.get((node, parameter))
+        stored = min(value, limit) if limit is not None else value
+        parameters[parameter] = stored
         self.dirty = True
         self.document_revision += 1
-        return self.snapshot()
+        snapshot = self.snapshot()
+        if stored != value:
+            snapshot['limited'] = {'node': node, 'parameter': parameter, 'requested': value, 'stored': stored}
+        return snapshot
 
     async def replace(self, slot, revision, node, model):
         self.require_editor(slot, revision)
@@ -181,6 +188,9 @@ async def mock_dispatch(method, path, headers, body, session, allowed_hosts=None
             result = session.set_mode(parts[1])
         elif parts[0] == 'knob':
             result = session.knob(int(parts[1]))
+        elif parts[0] == 'limit':
+            session.limits[(parts[1], parts[2])] = float(parts[3])
+            result = session.snapshot()
         else:
             result = session.requests
         return 200, 'application/json', json.dumps(result).encode()

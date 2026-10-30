@@ -36,6 +36,17 @@ class MockTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(state['presets'][2]['name'], FIXTURE_NAME_3)
         self.assertIsNone(state['last_save'])
 
+    async def test_limited_value_is_stored_and_reported(self):
+        self.session.limits[('amp', 'gain')] = 0.3
+        state = self.session.snapshot()
+        _, state = await self.post('/api/micro-plus/editor', {
+            'action': 'parameter', 'preset': state['preset'], 'revision': state['revision'],
+            'node': 'amp', 'parameter': 'gain', 'value': 0.7})
+        self.assertEqual(state['limited']['stored'], 0.3)
+        self.assertTrue(state['connected'])
+        amp = next(node for node in state['document']['audioGraph']['nodes'] if node['nodeId'] == 'amp')
+        self.assertEqual(amp['dspUnitParameters']['gain'], 0.3)
+
     async def test_knob_change_makes_open_editor_stale(self):
         state = self.session.snapshot()
         await mock_dispatch('GET', '/__mock/knob/5', HEADERS, b'', self.session)

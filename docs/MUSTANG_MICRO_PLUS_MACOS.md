@@ -76,9 +76,10 @@ after edits were made can show "Unsaved changes" without listing them.
 Normalized values appear as 0–10. Knobs for values the amp stores in real units
 (dB, Hz and seconds) use ranges chosen from saved presets with some room on each
 side, not from documentation. A saved value outside that range widens the knob
-rather than being changed. If the amp stores a different value from the one sent,
-for example by limiting it, the server treats the change as unconfirmed and
-reconnects to read the amp's current settings, which takes a moment. Which knobs
+rather than being changed. If the amp stores a different number from the one sent,
+for example by limiting it, the control moves to the stored value and the page says
+where it stopped. The stored value must also appear in the preset read back from
+the amp; otherwise the change counts as unconfirmed and the server reconnects. Which knobs
 each model shows follows Fender Tone's layouts where they were checked and saved
 presets elsewhere.
 Numbered choices such as **Delay modulation type**
@@ -145,7 +146,9 @@ The editor endpoint is `POST /api/micro-plus/editor` with an `action` of
 `parameter`, `model`, `save`, or `undo-save`. Each action includes `preset` and
 `revision` from the latest GET response. Parameter changes also supply `node`,
 `parameter` and `value`; model changes supply `node` and `model`; saves supply
-`target` and `name`. A stale revision returns HTTP 409, invalid data returns 400, an
+`target` and `name`. If the amp stored a different number from the one sent, the
+parameter response adds `limited` with `node`, `parameter`, `requested` and `stored`.
+A stale revision returns HTTP 409, invalid data returns 400, an
 unconfirmed device operation returns 503, and a backup-file failure returns 500.
 Do not retry an unconfirmed save automatically: read the actual state first.
 
@@ -205,8 +208,10 @@ loaded with their own settings and the expected knobs, in about 1.5 seconds each
 Rate knobs took 0.1 and 10 Hz on the Mod Delay, Flanger and modulated hall; the Mod
 Delay's Time took 1.5 s; the modulated hall's Level took −30 and 0 dB; Volume took
 −40 dB; the Five-band EQ's Low and Gain took ±12 dB; and the Greenbox's Output took
-−24 and 0 dB. A Time of 0.02 s was stored as 0.03 s and caused a reconnect, so that
-knob now stops at 0.03 s. Time on the other delays and the top of Volume (0 dB) were
+−24 and 0 dB. A Time of 0.02 s was stored as 0.03 s, so that knob now stops at
+0.03 s. It also caused a reconnect at the time; the server has since been changed to
+accept a limited value, which has so far been tested only against the simulator and
+automated tests. Time on the other delays and the top of Volume (0 dB) were
 not tried; the latter was left out because of the jump in loudness. Discarding
 restored the slot's settings.
 Disconnect handling is covered by simulated lifecycle tests; physical power-cycle
@@ -216,7 +221,7 @@ recovery was not tested.
 _work/mmp-venv/bin/python -m unittest discover -s scripts/tests -v
 ```
 
-The 48 hardware-independent tests cover captured packets, fragmented names,
+The 54 hardware-independent tests cover captured packets, fragmented names,
 typed parameters, acknowledgement and read-back requirements, backups before
 writes, undo, stale editor state, copy identities, keep-alives during pending switches,
 HTTP validation, same-origin writes and static-file access restrictions.
