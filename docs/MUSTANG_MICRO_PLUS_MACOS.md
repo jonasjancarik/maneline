@@ -22,6 +22,10 @@ uv pip install --python _work/mmp-venv/bin/python -r scripts/requirements-mmp.tx
 Turn on the Micro Plus and close Fender Tone on other devices. macOS may ask
 the application running Python for Bluetooth permission. If access is denied,
 enable it in System Settings > Privacy & Security > Bluetooth before retrying.
+macOS holds the app that launched Python responsible: if that app declares no
+Bluetooth use, the server prints its address and then crashes with a TCC error in
+`~/Library/Logs/DiagnosticReports`. This happened when launching from Claude Code,
+so start the server from Terminal or another app with Bluetooth access.
 
 ## Browser controls
 
@@ -81,8 +85,7 @@ followed by a matching read-back of the destination name and signal chain before
 success is reported. Acknowledgement alone is insufficient.
 
 **Undo this save** restores the backup from the most recent save, after backing up
-what it replaces. It is available until the server restarts. Undo has been tested
-with hardware-independent tests and the simulator, not yet on a real amp.
+what it replaces. It is available until the server restarts.
 
 **Discard changes** reloads the saved preset. Switching away from an edited preset
 also asks before discarding live edits or an unsaved name. Browser requests include
@@ -178,6 +181,10 @@ Editor tests were restricted to disposable slot 100, with a backup created befor
 its first write. Float, integer and boolean parameter edits, effect replacement,
 unsaved-change discard, same-slot save and cross-slot copy were exercised. A
 saved test name and gain were also verified over a new Bluetooth connection.
+The reworked page was then run against slot 100 in the browser: keyboard and
+sustained slider edits, a number box, an effect on/off switch, an integer setting,
+Reset, saving with a new name, and undo. The saved result survived switching away
+and back, and after undo the slot's definition matched its original exactly.
 Disconnect handling is covered by simulated lifecycle tests; physical power-cycle
 recovery was not tested.
 
