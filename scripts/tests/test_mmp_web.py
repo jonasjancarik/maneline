@@ -102,6 +102,9 @@ class PersistentTests(unittest.IsolatedAsyncioTestCase):
                 pass
 
             async def initialize(self):
+                pass
+
+            async def refresh_current(self):
                 ready.set()
 
             def notify(self, *args):

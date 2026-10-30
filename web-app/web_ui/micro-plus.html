@@ -28,6 +28,23 @@
     #presets span { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
     #presets strong { overflow-wrap: anywhere; }
     .hint { color: #555; }
+    #modules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; align-items: start; }
+    .module { padding: 16px; border: 1px solid #ccc; background: white; }
+    .module h3 { margin-top: 0; }
+    .module label { margin: 12px 0 4px; }
+    .module select, .module input:not([type=checkbox]) { width: 100%; }
+    .module output { float: right; font-variant-numeric: tabular-nums; }
+    #save-form { margin: 24px 0; padding: 16px; background: #edf3f6; display: flex; gap: 16px; align-items: end; flex-wrap: wrap; }
+    #save-form label { margin: 0; }
+    #save-form input, #save-form select { display: block; margin-top: 6px; min-height: 36px; }
+    #save-form button, #discard { min-height: 36px; padding: 6px 14px; font: inherit; }
+    #editor-message { min-height: 24px; }
+    #editor-message.error { color: #a32222; }
+    dialog { max-width: 450px; border: 1px solid #888; padding: 24px; }
+    dialog::backdrop { background: rgb(0 0 0 / 35%); }
+    dialog button { padding: 8px 16px; font: inherit; }
+    dialog .actions { display: flex; justify-content: end; gap: 12px; margin-top: 20px; }
+    #dirty { font-weight: bold; color: #875500; }
   </style>
   <script src="/web_ui/_static/micro-plus.js" defer></script>
 </head>
@@ -41,6 +58,19 @@
     <p id="connection" role="status">Connecting to your Micro Plus…</p>
     <p id="current" aria-live="polite">Reading the current preset…</p>
   </section>
+  <section id="editor" aria-labelledby="editor-title">
+    <h2 id="editor-title">Preset editor</h2>
+    <p class="hint">Hear changes as you make them. Save them to keep them on your Micro Plus.</p>
+    <p id="dirty" aria-live="polite"></p>
+    <div id="modules" aria-busy="true"></div>
+    <form id="save-form">
+      <label for="preset-name">Preset name<input id="preset-name" maxlength="16" required autocomplete="off"></label>
+      <label for="save-target">Destination preset<select id="save-target" aria-label="Destination preset"></select></label>
+      <button id="save" type="submit" disabled>Save to device</button>
+      <button id="discard" type="button" disabled>Discard unsaved changes</button>
+    </form>
+    <p id="editor-message" role="status" aria-live="polite"></p>
+  </section>
   <section aria-labelledby="presets-title">
     <h2 id="presets-title">Presets</h2>
     <p class="hint">Choose a preset. Switching does not change your saved preset settings.</p>
@@ -51,5 +81,15 @@
     <p id="message" role="status" aria-live="polite"></p>
   </section>
 </main>
+<dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+  <form method="dialog">
+    <h2 id="confirm-title"></h2>
+    <p id="confirm-text"></p>
+    <div class="actions">
+      <button value="cancel" autofocus>Cancel</button>
+      <button id="confirm-action" value="confirm">Confirm</button>
+    </div>
+  </form>
+</dialog>
 </body>
 </html>

@@ -1,0 +1,39 @@
+{
+  "gatePreset": [
+    "high",
+    "low",
+    "mid",
+    "off",
+    "super"
+  ],
+  "cabsimType": [
+    "1x12ss",
+    "2x12c",
+    "4x12g",
+    "4x12g2",
+    "4x12m",
+    "4x12r",
+    "4x12sld",
+    "4x12v",
+    "4x12v2",
+    "57champ",
+    "57dlx",
+    "59bman",
+    "65dlx",
+    "65prince",
+    "65twn",
+    "exlsr",
+    "none"
+  ],
+  "noteDivision": [
+    "dottedEighth",
+    "off",
+    "quarter"
+  ],
+  "gateDetectorPosition": [
+    "jack"
+  ],
+  "mode": [
+    "6G4A"
+  ]
+}

@@ -8,7 +8,7 @@ import mimetypes
 import socket
 from pathlib import Path
 from urllib.parse import urlsplit
-from mmp_session import MicroPlusSession
+from mmp_session import EditorConflict, MicroPlusSession
 
 WEB_ROOT = Path(__file__).resolve().parents[1] / 'web-app' / 'web_ui'
 
@@ -23,7 +23,7 @@ async def dispatch(method, path, headers, body, session, allowed_hosts=None):
     if allowed_hosts is not None and host not in allowed_hosts:
         raise HTTPError(403, 'Use the local Maneline address to open these controls.')
     if path.startswith('/api/'):
-        if path != '/api/micro-plus':
+        if path not in ('/api/micro-plus', '/api/micro-plus/editor'):
             raise HTTPError(404, 'Page not found.')
         if method == 'GET':
             return 200, 'application/json', json.dumps(session.snapshot()).encode()
@@ -32,14 +32,35 @@ async def dispatch(method, path, headers, body, session, allowed_hosts=None):
         # Browser writes must come from this same host; no cross-origin controls.
         origin = headers.get('origin')
         if origin is None or urlsplit(origin).netloc != headers.get('host'):
-            raise HTTPError(403, 'Open the controls on this server before changing presets.')
+            raise HTTPError(403, 'Open the controls on this server before changing the device.')
         if headers.get('content-type', '').split(';')[0].strip() != 'application/json':
-            raise HTTPError(415, 'Send the preset number as JSON.')
+            raise HTTPError(415, 'Send the requested change as JSON.')
         try:
             request = json.loads(body)
-            if not isinstance(request, dict) or set(request) != {'preset'}:
-                raise ValueError('Choose a preset number from 1 to 100.')
-            state = await session.switch(request['preset'])
+            if not isinstance(request, dict):
+                raise ValueError('Send a JSON object describing the change.')
+            if path == '/api/micro-plus':
+                if set(request) != {'preset'}:
+                    raise ValueError('Choose a preset number from 1 to 100.')
+                state = await session.switch(request['preset'])
+            else:
+                action = request.get('action')
+                common = {'action', 'preset', 'revision'}
+                if action == 'parameter' and set(request) == common | {'node', 'parameter', 'value'}:
+                    state = await session.edit(request['preset'], request['revision'], request['node'],
+                                               request['parameter'], request['value'])
+                elif action == 'model' and set(request) == common | {'node', 'model'}:
+                    state = await session.replace(request['preset'], request['revision'],
+                                                  request['node'], request['model'])
+                elif action == 'save' and set(request) == common | {'target', 'name'}:
+                    state = await session.save(request['preset'], request['revision'],
+                                               request['target'], request['name'])
+                else:
+                    raise ValueError('Choose a parameter, model, or save operation.')
+        except EditorConflict as error:
+            raise HTTPError(409, str(error)) from error
+        except OSError as error:
+            raise HTTPError(500, 'Could not create a backup of the preset, so nothing was saved.') from error
         except (ValueError, UnicodeError) as error:
             raise HTTPError(400, str(error)) from error
         except RuntimeError as error:
@@ -57,7 +78,7 @@ async def dispatch(method, path, headers, body, session, allowed_hosts=None):
 
 async def handle(reader, writer, session, allowed_hosts=None):
     try:
-        async with asyncio.timeout(15):
+        async with asyncio.timeout(40):
             raw = await reader.readuntil(b'\r\n\r\n')
             if len(raw) > 8192:
                 raise HTTPError(431, 'Request headers are too large.')

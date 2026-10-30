@@ -1,0 +1,228 @@
+{
+  "stomp": [
+    {
+      "id": "DUBS_Unknown",
+      "name": "None"
+    },
+    {
+      "id": "ACD_LargeOverdrive",
+      "name": "Overdrive"
+    },
+    {
+      "id": "ACD_Greenbox",
+      "name": "Greenbox"
+    },
+    {
+      "id": "ACD_MythicDrive",
+      "name": "Mythic Drive"
+    },
+    {
+      "id": "ACD_Blackbox",
+      "name": "Blackbox"
+    },
+    {
+      "id": "ACD_VariFuzz",
+      "name": "Vari Fuzz"
+    },
+    {
+      "id": "ACD_BigFuzzGT",
+      "name": "Big fuzz"
+    },
+    {
+      "id": "ACD_Octobot",
+      "name": "Octobot"
+    },
+    {
+      "id": "ACD_CompressorSimple",
+      "name": "Compressor"
+    },
+    {
+      "id": "ACD_Sustain",
+      "name": "Sustain"
+    },
+    {
+      "id": "ACD_MustangFiveBandEq1",
+      "name": "Five-band EQ"
+    },
+    {
+      "id": "ACD_EcFilter",
+      "name": "Envelope filter"
+    }
+  ],
+  "mod": [
+    {
+      "id": "DUBS_Unknown",
+      "name": "None"
+    },
+    {
+      "id": "ACD_ChorusSine",
+      "name": "Chorus"
+    },
+    {
+      "id": "ACD_FlangerTriangle",
+      "name": "Flanger"
+    },
+    {
+      "id": "ACD_PhaserFender",
+      "name": "Phaser"
+    },
+    {
+      "id": "ACD_Vibratone",
+      "name": "Vibratone"
+    },
+    {
+      "id": "ACD_TremoloSine",
+      "name": "Tremolo"
+    },
+    {
+      "id": "ACD_TremoloHarmonic",
+      "name": "Harmonic tremolo"
+    }
+  ],
+  "delay": [
+    {
+      "id": "DUBS_Unknown",
+      "name": "None"
+    },
+    {
+      "id": "ACD_BoilerPlateMono",
+      "name": "Mono delay"
+    },
+    {
+      "id": "ACD_BoilerPlateTapeLite",
+      "name": "Tape delay"
+    },
+    {
+      "id": "ACD_ModDelay",
+      "name": "Mod Delay"
+    },
+    {
+      "id": "ACD_BoilerPlateReverse",
+      "name": "Reverse delay"
+    }
+  ],
+  "reverb": [
+    {
+      "id": "DUBS_Unknown",
+      "name": "None"
+    },
+    {
+      "id": "ACD_FenderLargeHall",
+      "name": "Large hall"
+    },
+    {
+      "id": "ACD_FenderSmallRoom",
+      "name": "Small room"
+    },
+    {
+      "id": "ACD_Spring65",
+      "name": "Spring reverb"
+    },
+    {
+      "id": "ACD_FenderLargeModulatedHall",
+      "name": "Modulated hall"
+    }
+  ],
+  "amp": [
+    {
+      "id": "ACD_Champ57GT",
+      "name": "'57 Champ"
+    },
+    {
+      "id": "ACD_Deluxe57GT",
+      "name": "'57 Deluxe"
+    },
+    {
+      "id": "ACD_Twin57GT",
+      "name": "'57 Twin"
+    },
+    {
+      "id": "ACD_Bassman59GT",
+      "name": "'59 Bassman"
+    },
+    {
+      "id": "ACD_Princeton65GT",
+      "name": "'65 Princeton"
+    },
+    {
+      "id": "ACD_Deluxe65GT",
+      "name": "'65 Deluxe"
+    },
+    {
+      "id": "ACD_Twin65GT",
+      "name": "'65 Twin"
+    },
+    {
+      "id": "ACD_Bassbreaker15GT",
+      "name": "Bassbreaker 15 — low gain"
+    },
+    {
+      "id": "ACD_Bassbreaker15MedGT",
+      "name": "Bassbreaker 15 — medium gain"
+    },
+    {
+      "id": "ACD_Bassbreaker15HighGT",
+      "name": "Bassbreaker 15 — high gain"
+    },
+    {
+      "id": "ACD_ExcelsiorGT",
+      "name": "Excelsior"
+    },
+    {
+      "id": "ACD_SuperSonicGT",
+      "name": "Super Sonic"
+    },
+    {
+      "id": "ACD_Ac30TbGT",
+      "name": "British AC30"
+    },
+    {
+      "id": "ACD_Plexi87GT",
+      "name": "British Plexi"
+    },
+    {
+      "id": "ACD_Jcm800GT",
+      "name": "British 800"
+    },
+    {
+      "id": "ACD_Rect2GT",
+      "name": "Rectifier"
+    },
+    {
+      "id": "ACD_Or120GT",
+      "name": "British OR120"
+    },
+    {
+      "id": "ACD_DR103GT",
+      "name": "British DR103"
+    },
+    {
+      "id": "ACD_BE100GT",
+      "name": "BE100"
+    },
+    {
+      "id": "ACD_Evh3GT",
+      "name": "5150-style high gain"
+    },
+    {
+      "id": "ACD_SilvertoneGT",
+      "name": "Silvertone"
+    },
+    {
+      "id": "ACD_UberschallGT",
+      "name": "Uberschall"
+    },
+    {
+      "id": "ACD_LinearGainGT",
+      "name": "Clean preamp"
+    },
+    {
+      "id": "ACD_StudioTubePreampGT",
+      "name": "Tube preamp"
+    },
+    {
+      "id": "ACD_AcousticSimGT",
+      "name": "Acoustic simulator"
+    }
+  ]
+}

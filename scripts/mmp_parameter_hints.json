@@ -1,0 +1,137 @@
+{
+  "ACD_Ac30TbGT": [
+    "volume"
+  ],
+  "ACD_AcousticSimGT": [
+    "volume"
+  ],
+  "ACD_BE100GT": [
+    "volume"
+  ],
+  "ACD_Bassbreaker15GT": [
+    "volume"
+  ],
+  "ACD_Bassbreaker15HighGT": [
+    "volume"
+  ],
+  "ACD_Bassbreaker15MedGT": [
+    "volume"
+  ],
+  "ACD_Bassman59GT": [
+    "volume"
+  ],
+  "ACD_BigFuzzGT": [
+    "outputlevel"
+  ],
+  "ACD_Blackbox": [
+    "outputlevel"
+  ],
+  "ACD_BoilerPlateMono": [
+    "bright",
+    "tapTimeBPM"
+  ],
+  "ACD_BoilerPlateReverse": [
+    "tapTimeBPM"
+  ],
+  "ACD_BoilerPlateTapeLite": [
+    "tapTimeBPM",
+    "wetlvl"
+  ],
+  "ACD_Champ57GT": [
+    "volume"
+  ],
+  "ACD_ChorusSine": [
+    "tapTimeBPM"
+  ],
+  "ACD_DR103GT": [
+    "volume"
+  ],
+  "ACD_Deluxe57GT": [
+    "volume"
+  ],
+  "ACD_Deluxe65GT": [
+    "volume"
+  ],
+  "ACD_EcFilter": [
+    "mode"
+  ],
+  "ACD_Evh3GT": [
+    "volume"
+  ],
+  "ACD_ExcelsiorGT": [
+    "volume"
+  ],
+  "ACD_FenderLargeModulatedHall": [
+    "ratehz",
+    "wetlvl"
+  ],
+  "ACD_FlangerTriangle": [
+    "tapTimeBPM"
+  ],
+  "ACD_Greenbox": [
+    "outputlevel"
+  ],
+  "ACD_Jcm800GT": [
+    "volume"
+  ],
+  "ACD_LinearGainGT": [
+    "volume"
+  ],
+  "ACD_ModDelay": [
+    "modratehz",
+    "panratehz",
+    "tapTimeBPM"
+  ],
+  "ACD_MustangFiveBandEq1": [
+    "gain",
+    "highmid",
+    "low",
+    "lowmid",
+    "mid"
+  ],
+  "ACD_Or120GT": [
+    "volume"
+  ],
+  "ACD_PhaserFender": [
+    "tapTimeBPM"
+  ],
+  "ACD_Plexi87GT": [
+    "volume"
+  ],
+  "ACD_Princeton65GT": [
+    "volume"
+  ],
+  "ACD_Rect2GT": [
+    "volume"
+  ],
+  "ACD_SilvertoneGT": [
+    "volume"
+  ],
+  "ACD_SuperSonicGT": [
+    "volume"
+  ],
+  "ACD_TremoloHarmonic": [
+    "ratehz",
+    "tapTimeBPM"
+  ],
+  "ACD_TremoloSine": [
+    "ratehz",
+    "tapTimeBPM"
+  ],
+  "ACD_Twin57GT": [
+    "volume"
+  ],
+  "ACD_Twin65GT": [
+    "volume"
+  ],
+  "ACD_UberschallGT": [
+    "volume"
+  ],
+  "ACD_VariFuzz": [
+    "inputfiltermode"
+  ],
+  "ACD_Vibratone": [
+    "ratehz",
+    "tapTimeBPM"
+  ]
+}
