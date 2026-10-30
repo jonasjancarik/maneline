@@ -209,9 +209,10 @@ Rate knobs took 0.1 and 10 Hz on the Mod Delay, Flanger and modulated hall; the 
 Delay's Time took 1.5 s; the modulated hall's Level took −30 and 0 dB; Volume took
 −40 dB; the Five-band EQ's Low and Gain took ±12 dB; and the Greenbox's Output took
 −24 and 0 dB. A Time of 0.02 s was stored as 0.03 s, so that knob now stops at
-0.03 s. It also caused a reconnect at the time; the server has since been changed to
-accept a limited value, which has so far been tested only against the simulator and
-automated tests. Time on the other delays and the top of Volume (0 dB) were
+0.03 s. That used to cause a reconnect; the server now accepts the limited value, and
+a retest on the amp reported 0.03 s back and kept the same connection. That retest
+sent the value straight to the server rather than from the page, so the page's message
+about a limited value has only been seen against the simulator. Time on the other delays and the top of Volume (0 dB) were
 not tried; the latter was left out because of the jump in loudness. Discarding
 restored the slot's settings.
 Disconnect handling is covered by simulated lifecycle tests; physical power-cycle
