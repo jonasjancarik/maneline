@@ -3,91 +3,106 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>Mustang Micro Plus · Maneline</title>
-  <link rel="stylesheet" href="/web_ui/_static/css/theme.css">
-  <link rel="stylesheet" href="/web_ui/_static/style-font.css">
+  <link rel="stylesheet" href="/web_ui/_static/micro-plus.css">
   <link rel="icon" href="/web_ui/_static/maneline-icon-512x512.png">
-  <style>
-    body { margin: 0; }
-    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
-    header { display: flex; align-items: center; gap: 18px; margin-bottom: 30px; }
-    header img { width: 64px; height: 64px; }
-    h1 { margin: 0; } header p { margin: 4px 0 0; }
-    #current { font-size: 24px; margin: 12px 0 24px; min-height: 36px; }
-    #connection { margin: 0; }
-    #message { min-height: 24px; margin-top: 12px; }
-    #message.error { color: #a32222; }
-    label { display: block; margin-bottom: 6px; }
-    #filter { width: 100%; max-width: 400px; margin-bottom: 20px; }
-    #presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-    #presets button { min-height: 78px; padding: 12px; text-align: left;
-      font: inherit; cursor: pointer; border: 1px solid #aaa; background: #fff; color: #333; }
-    #presets button[aria-pressed="true"] { border: 2px solid #24769f; background: #eaf5fa; }
-    #presets button:focus-visible { outline: 3px solid #24769f; outline-offset: 3px; }
-    #presets button:disabled { opacity: .55; cursor: wait; }
-    #presets span { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
-    #presets strong { overflow-wrap: anywhere; }
-    .hint { color: #555; }
-    #modules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; align-items: start; }
-    .module { padding: 16px; border: 1px solid #ccc; background: white; }
-    .module h3 { margin-top: 0; }
-    .module label { margin: 12px 0 4px; }
-    .module select, .module input:not([type=checkbox]) { width: 100%; }
-    .module output { float: right; font-variant-numeric: tabular-nums; }
-    #save-form { margin: 24px 0; padding: 16px; background: #edf3f6; display: flex; gap: 16px; align-items: end; flex-wrap: wrap; }
-    #save-form label { margin: 0; }
-    #save-form input, #save-form select { display: block; margin-top: 6px; min-height: 36px; }
-    #save-form button, #discard { min-height: 36px; padding: 6px 14px; font: inherit; }
-    #editor-message { min-height: 24px; }
-    #editor-message.error { color: #a32222; }
-    dialog { max-width: 450px; border: 1px solid #888; padding: 24px; }
-    dialog::backdrop { background: rgb(0 0 0 / 35%); }
-    dialog button { padding: 8px 16px; font: inherit; }
-    dialog .actions { display: flex; justify-content: end; gap: 12px; margin-top: 20px; }
-    #dirty { font-weight: bold; color: #875500; }
-  </style>
+  <script src="/web_ui/_static/micro-plus-params.js" defer></script>
   <script src="/web_ui/_static/micro-plus.js" defer></script>
 </head>
-<body class="wy-body-for-nav">
-<main>
-  <header>
-    <img src="/web_ui/_static/maneline-icon-512x512.png" alt="">
-    <div><h1>Mustang Micro Plus</h1><p>Maneline</p></div>
-  </header>
-  <section aria-label="Bluetooth connection">
-    <p id="connection" role="status">Connecting to your Micro Plus…</p>
-    <p id="current" aria-live="polite">Reading the current preset…</p>
-  </section>
-  <section id="editor" aria-labelledby="editor-title">
-    <h2 id="editor-title">Preset editor</h2>
-    <p class="hint">Hear changes as you make them. Save them to keep them on your Micro Plus.</p>
-    <p id="dirty" aria-live="polite"></p>
-    <div id="modules" aria-busy="true"></div>
-    <form id="save-form">
-      <label for="preset-name">Preset name<input id="preset-name" maxlength="16" required autocomplete="off"></label>
-      <label for="save-target">Destination preset<select id="save-target" aria-label="Destination preset"></select></label>
-      <button id="save" type="submit" disabled>Save to device</button>
-      <button id="discard" type="button" disabled>Discard unsaved changes</button>
-    </form>
-    <p id="editor-message" role="status" aria-live="polite"></p>
-  </section>
-  <section aria-labelledby="presets-title">
-    <h2 id="presets-title">Presets</h2>
-    <p class="hint">Choose a preset. Switching does not change your saved preset settings.</p>
-    <label for="filter">Find a preset by name or number</label>
-    <input id="filter" type="search" placeholder="Search presets" autocomplete="off">
-    <div id="presets" aria-busy="true"></div>
+<body>
+<header id="topbar">
+  <div class="now">
+    <button id="open-presets" type="button" class="narrow-only">Presets</button>
+    <button id="prev" type="button" class="icon" aria-label="Previous preset" title="Previous preset ( [ )">&#8249;</button>
+    <div class="now-text">
+      <span id="current-number">Mustang Micro Plus</span>
+      <strong id="current-name">Waiting for your amp</strong>
+    </div>
+    <button id="next" type="button" class="icon" aria-label="Next preset" title="Next preset ( ] )">&#8250;</button>
+  </div>
+  <p id="connection" data-state="connecting"><span class="dot" aria-hidden="true"></span><span id="connection-text">Connecting</span></p>
+  <div class="actions">
+    <span id="dirty"></span>
+    <button id="discard" type="button" disabled>Discard changes</button>
+    <button id="save-copy" type="button" disabled>Save as copy</button>
+    <button id="save" type="button" class="primary" disabled>Save</button>
+  </div>
+</header>
+
+<div id="connection-banner" role="status" hidden></div>
+<div id="message" role="status" hidden></div>
+
+<div id="layout">
+  <aside id="preset-panel" aria-labelledby="presets-title">
+    <div class="panel-head">
+      <h2 id="presets-title">Presets</h2>
+      <button id="close-presets" type="button" class="narrow-only">Close</button>
+    </div>
+    <label for="filter">Find by name or number</label>
+    <input id="filter" type="search" placeholder="For example, Twin or 17" autocomplete="off">
+    <div class="list-tools">
+      <span id="count"></span>
+      <label class="check"><input id="show-empty" type="checkbox"> <span id="show-empty-label">Show empty slots</span></label>
+    </div>
+    <ol id="presets" aria-busy="true"></ol>
     <p id="empty" hidden>No presets match your search.</p>
-    <p id="message" role="status" aria-live="polite"></p>
-  </section>
-</main>
+  </aside>
+  <div id="scrim" class="narrow-only" hidden></div>
+
+  <main>
+    <div id="waiting">
+      <h1>Looking for your Micro Plus</h1>
+      <p>Turn on the amp and close Fender Tone on your other devices. This page connects by itself once the amp is found.</p>
+    </div>
+    <fieldset id="editor" hidden>
+      <legend class="visually-hidden">Preset editor</legend>
+      <div class="name-row">
+        <label for="preset-name">Preset name</label>
+        <input id="preset-name" maxlength="16" required autocomplete="off">
+        <span id="name-count"></span>
+        <span id="sync" role="status"></span>
+      </div>
+      <p class="hint">Changes reach the amp as you make them, about once a second. They aren't kept until you save.</p>
+      <h2 class="visually-hidden">Signal chain</h2>
+      <div id="chain"></div>
+      <section id="module-panel" aria-live="off"></section>
+      <details id="changes" hidden>
+        <summary id="changes-summary"></summary>
+        <ul id="changes-list"></ul>
+      </details>
+    </fieldset>
+    <div id="last-save" hidden>
+      <span id="last-save-text"></span>
+      <button id="undo-save" type="button">Undo this save</button>
+    </div>
+    <p class="shortcuts">Keyboard: <kbd>[</kbd> and <kbd>]</kbd> change preset. In the preset list, use the up and down arrows.</p>
+  </main>
+</div>
+
 <dialog id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-text">
   <form method="dialog">
     <h2 id="confirm-title"></h2>
     <p id="confirm-text"></p>
-    <div class="actions">
+    <div class="dialog-actions">
       <button value="cancel" autofocus>Cancel</button>
-      <button id="confirm-action" value="confirm">Confirm</button>
+      <button id="confirm-action" class="primary" value="confirm">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="copy-dialog" aria-labelledby="copy-title">
+  <form method="dialog">
+    <h2 id="copy-title">Save as copy</h2>
+    <p>Your current preset stays as it is, and you keep editing it afterwards.</p>
+    <label for="copy-name">Name for the copy</label>
+    <input id="copy-name" maxlength="16" required autocomplete="off">
+    <label for="copy-target">Save it to</label>
+    <select id="copy-target"></select>
+    <p id="copy-warning"></p>
+    <div class="dialog-actions">
+      <button value="cancel" formnovalidate>Cancel</button>
+      <button id="copy-action" class="primary" value="confirm">Save copy</button>
     </div>
   </form>
 </dialog>
