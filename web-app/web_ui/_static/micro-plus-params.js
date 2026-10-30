@@ -88,8 +88,8 @@ const knobLabels = { treb: 'Treble', mid: 'Middle', gain2: 'Gain 2', mastervolum
   octup: 'Octave up', dampingcoef: 'Damping', ratehz: 'Rate', lrphase: 'Phase', wetlvl: 'Level', fdbklvl: 'Feedback',
   feedbacklvl: 'Feedback', delaytime: 'Time', dlytime: 'Time', time: 'Time', wowlevel: 'Wow', fblowcut: 'Low cut',
   fbhighcut: 'High cut', modratehz: 'Mod rate', moddepth: 'Mod depth', panratehz: 'Pan rate', pandepth: 'Pan depth' };
-// Knob travel for values the amp stores in real units. Inferred from saved presets with some room on each side,
-// so the ends may be further than the amp accepts; it reports an error rather than taking a bad value.
+// Knob travel for values the amp stores in real units, chosen from saved presets with some room on each side.
+// The ends were tried on a real amp on firmware 1.1.11, except the top of volume. These aren't necessarily its limits.
 const nativeRanges = {
   volume: { min: -40, max: 0, step: 0.1, unit: ' dB', digits: 1 },
   outputlevel: { min: -24, max: 0, step: 0.1, unit: ' dB', digits: 1 },
@@ -97,9 +97,9 @@ const nativeRanges = {
   ratehz: { min: 0.1, max: 10, step: 0.01, unit: ' Hz', digits: 2 },
   modratehz: { min: 0.1, max: 10, step: 0.01, unit: ' Hz', digits: 2 },
   panratehz: { min: 0.1, max: 10, step: 0.01, unit: ' Hz', digits: 2 },
-  dlytime: { min: 0.02, max: 1.5, step: 0.01, unit: ' s', digits: 2 },
-  delaytime: { min: 0.02, max: 1.5, step: 0.01, unit: ' s', digits: 2 },
-  time: { min: 0.02, max: 1.5, step: 0.01, unit: ' s', digits: 2 }
+  dlytime: { min: 0.03, max: 1.5, step: 0.01, unit: ' s', digits: 2 },
+  delaytime: { min: 0.03, max: 1.5, step: 0.01, unit: ' s', digits: 2 },
+  time: { min: 0.03, max: 1.5, step: 0.01, unit: ' s', digits: 2 }
 };
 const eqBand = { min: -12, max: 12, step: 0.1, unit: ' dB', digits: 1 };
 const eqParameters = new Set(['low', 'lowmid', 'mid', 'highmid', 'high', 'gain']);

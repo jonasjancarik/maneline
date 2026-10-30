@@ -74,11 +74,13 @@ That comparison is held by the page for the current connection, so a page opened
 after edits were made can show "Unsaved changes" without listing them.
 
 Normalized values appear as 0–10. Knobs for values the amp stores in real units
-(dB, Hz and seconds) use ranges inferred from saved presets with some room on each
-side, not from documentation, so the far ends of a knob may be values the amp
-refuses. A saved value outside that range widens the knob rather than being changed,
-and the amp rejects values it does not accept. Which knobs each model shows follows
-Fender Tone's layouts where they were checked and saved presets elsewhere.
+(dB, Hz and seconds) use ranges chosen from saved presets with some room on each
+side, not from documentation. A saved value outside that range widens the knob
+rather than being changed. If the amp stores a different value from the one sent,
+for example by limiting it, the server treats the change as unconfirmed and
+reconnects to read the amp's current settings, which takes a moment. Which knobs
+each model shows follows Fender Tone's layouts where they were checked and saved
+presets elsewhere.
 Numbered choices such as **Delay modulation type**
 stay numbered because the amp does not report their names. String menus include
 values observed on the device and may not contain every option supported by the
@@ -195,6 +197,18 @@ The reworked page was then run against slot 100 in the browser: keyboard and
 sustained slider edits, a number box, an effect on/off switch, an integer setting,
 Reset, saving with a new name, and undo. The saved result survived switching away
 and back, and after undo the slot's definition matched its original exactly.
+
+The pedalboard was then run against slot 100, without saving. Dragging a knob, arrow
+keys, the board footswitch and the close-up all worked, with each send confirmed in
+about a second. Every stompbox, modulation, delay and reverb model and all 25 amps
+loaded with their own settings and the expected knobs, in about 1.5 seconds each.
+Rate knobs took 0.1 and 10 Hz on the Mod Delay, Flanger and modulated hall; the Mod
+Delay's Time took 1.5 s; the modulated hall's Level took −30 and 0 dB; Volume took
+−40 dB; the Five-band EQ's Low and Gain took ±12 dB; and the Greenbox's Output took
+−24 and 0 dB. A Time of 0.02 s was stored as 0.03 s and caused a reconnect, so that
+knob now stops at 0.03 s. Time on the other delays and the top of Volume (0 dB) were
+not tried; the latter was left out because of the jump in loudness. Discarding
+restored the slot's settings.
 Disconnect handling is covered by simulated lifecycle tests; physical power-cycle
 recovery was not tested.
 
