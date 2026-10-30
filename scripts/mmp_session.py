@@ -3,7 +3,9 @@ import asyncio
 import contextlib
 import json
 import os
+import sys
 import time
+import traceback
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -65,6 +67,10 @@ class MicroPlusSession:
         return controller
 
     def unconfirmed(self, action):
+        # Callers replace the exception with a friendly message, so this is the only record of the cause.
+        print(f'Micro Plus {action} not confirmed:', file=sys.stderr)
+        traceback.print_exc()
+        sys.stderr.flush()
         messages = {
             'save': 'The save could not be verified. Reconnecting to read the device; check the result before saving again.',
             'undo': 'The undo could not be verified. Reconnecting to read the device; check the result before saving again.',

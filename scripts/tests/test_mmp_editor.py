@@ -1,5 +1,7 @@
 """Safety checks for saving edited Micro Plus presets."""
+import contextlib
 import copy
+import io
 import json
 import sys
 import tempfile
@@ -46,6 +48,16 @@ class EditorTests(unittest.IsolatedAsyncioTestCase):
             result = await session.save(100, '2:4', 100, 'Edited')
             self.assertTrue(result['last_save']['verified'])
             session.controller.save_current.assert_awaited_once_with('Edited', 100)
+
+    async def test_unconfirmed_change_logs_the_real_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            session = self.session(directory)
+            session.controller.set_parameter = AsyncMock(side_effect=TimeoutError())
+            log = io.StringIO()
+            with contextlib.redirect_stderr(log), self.assertRaisesRegex(RuntimeError, 'did not confirm'):
+                await session.edit(100, '2:4', 'delay', 'dlytime', 0.02)
+            self.assertIn('parameter change not confirmed', log.getvalue())
+            self.assertIn('TimeoutError', log.getvalue())
 
     async def test_backup_failure_prevents_hardware_save(self):
         with tempfile.TemporaryDirectory() as directory:
